@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 import sys
-file = Path("../stimage").resolve()
+file = Path("../models/STimage/stimage").resolve()
 parent= file.parent
 sys.path.append(str(parent))
 from PIL import Image
@@ -67,9 +67,10 @@ def calculate_correlation_2(attr_1, attr_2):
     return r
 
 
-DATA_PATH = Path("/scratch/imb/Xiao/STimage/dataset/her2st")
+DATA_PATH = Path("../data/her2st")
 
 adata_all = read_h5ad(DATA_PATH / "all_adata.h5ad")
+adata_all.obs['tile_path'] = adata_all.obs['tile_path'].apply(lambda x: x.replace('/clusterdata/uqxtan9/Q1851/Xiao/Working_project/','../data/'))
 
 # adata_all = ensembl_to_id(adata_all)
 
@@ -78,7 +79,7 @@ samples = adata_all.obs["library_id"].unique().tolist()
 # gene_list=["COX6C","TTLL12", "PABPC1", "GNAS", "HSP90AB1", 
 #            "TFF3", "ATP1A1", "B2M", "FASN", "SPARC", "CD74", "CD63", "CD24", "CD81"]
 
-gene_list_path = "/scratch/imb/Xiao/STimage/development/stimage_compare_histogene_1000hvg/gene_list.pkl"
+gene_list_path = "./gene_list.pkl"
 with open(gene_list_path, 'rb') as f:
     gene_list = pickle.load(f)
 
@@ -156,7 +157,7 @@ for gene in pred_adata.var_names:
                          index=["Gene", "Pearson correlation", "Slide", "Method"]),
                   ignore_index=True)
 
-df.to_csv("./stimage_compare_histogene_1000hvg/stimage_cor_{}.csv".format(test_sample))
+df.to_csv("../results/stimage_cor_{}.csv".format(test_sample))
 
 
 

@@ -8,15 +8,18 @@
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:tesla:1
 #SBATCH --job-name histogene
-#SBATCH --array=0-35
+#SBATCH --array=0
 module load cuda/11.0.2.450
 module load gnu7
 module load openmpi3
 module load anaconda/3.6
-source activate /scratch/imb/Xiao/.conda/envs/histogene
+source activate ../envs/histogene
 
-PATH=/scratch/imb/Xiao/.conda/envs/histogene/bin:$PATH
+SRC_DIR=$(cd ../envs/histogene/bin; pwd)
+PATH=${SRC_DIR}:$PATH
 
-cd /clusterdata/uqxtan9/Xiao/STimage/development
+cwd=$(pwd)
 
-python ./stimage_compare_histogene_1000hvg/histogene.py $SLURM_ARRAY_TASK_ID
+cd ../models/HisToGene
+
+python ${cwd}/histogene_her2st.py $SLURM_ARRAY_TASK_ID

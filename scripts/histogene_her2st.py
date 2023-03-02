@@ -1,7 +1,8 @@
 from pathlib import Path
 import sys
-sys.path.append("/clusterdata/uqxtan9/Xiao/HisToGene")
+# sys.path.append("../models/HisToGene")
 
+sys.path.append("./")
 
 import os
 import torch
@@ -253,7 +254,7 @@ class ViT_HER2ST(torch.utils.data.Dataset):
         # gene_list = list(np.load('data/her_hvg.npy',allow_pickle=True))
         # gene_list=["COX6C","TTLL12", "PABPC1", "GNAS", "HSP90AB1", 
         #    "TFF3", "ATP1A1", "B2M", "FASN", "SPARC", "CD74", "CD63", "CD24", "CD81"]
-        gene_list_path = "/clusterdata/uqxtan9/Xiao/STimage/development/stimage_compare_histogene_1000hvg/gene_list.pkl"
+        gene_list_path = "../../scripts/gene_list.pkl"
         with open(gene_list_path, 'rb') as f:
             gene_list = pickle.load(f)
         self.gene_list = gene_list
@@ -677,7 +678,7 @@ def calculate_correlation_2(attr_1, attr_2):
 
 # gene_list=["COX6C","TTLL12", "PABPC1", "GNAS", "HSP90AB1", 
 #           "TFF3", "ATP1A1", "B2M", "FASN", "SPARC", "CD74", "CD63", "CD24", "CD81"]
-gene_list_path = "/clusterdata/uqxtan9/Xiao/STimage/development/stimage_compare_histogene_1000hvg/gene_list.pkl"
+gene_list_path = "../../scripts/gene_list.pkl"
 with open(gene_list_path, 'rb') as f:
     gene_list = pickle.load(f)
 n_genes = len(gene_list)
@@ -721,4 +722,4 @@ for gene in pred_adata.var_names:
 del model
 torch.cuda.empty_cache()
 
-df.to_csv("./stimage_compare_histogene_1000hvg/histogene_cor_{}.csv".format(test_sample))
+df.to_csv("../../results/histogene_cor_{}.csv".format(test_sample))

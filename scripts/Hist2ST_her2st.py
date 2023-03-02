@@ -1,3 +1,6 @@
+import sys
+sys.path.append("./")
+
 import torch
 import numpy as np
 import pytorch_lightning as pl
@@ -99,4 +102,4 @@ for gene in pred_adata.var_names:
 del model
 torch.cuda.empty_cache()
 
-df.to_csv("../stimage_compare_histogene_1000hvg/hist2ST_cor_{}.csv".format(test_sample))
+df.to_csv("../../results/hist2ST_cor_{}.csv".format(test_sample))

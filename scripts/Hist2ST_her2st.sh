@@ -7,16 +7,19 @@
 #SBATCH -e error_%x_%j.txt
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:tesla:1
-#SBATCH --job-name histogene
-#SBATCH --array=0-35
+#SBATCH --job-name hist2st
+#SBATCH --array=0
 #module load cuda/11.0.2.450
 #module load gnu7
 #module load openmpi3
 module load anaconda/3.6
-source activate /scratch/imb/Xiao/.conda/envs/Hist2ST
+source activate ../envs/Hist2ST
 
-PATH=/scratch/imb/Xiao/.conda/envs/Hist2ST/bin:$PATH
+SRC_DIR=$(cd ../envs/Hist2ST/bin; pwd)
+PATH=${SRC_DIR}:$PATH
 
-cd /clusterdata/uqxtan9/Xiao/STimage/development/Hist2ST
+cwd=$(pwd)
 
-python Hist2ST_cv.py $SLURM_ARRAY_TASK_ID
+cd ../models/Hist2ST
+
+python ${cwd}/Hist2ST_her2st.py $SLURM_ARRAY_TASK_ID
