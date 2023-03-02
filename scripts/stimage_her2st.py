@@ -1,4 +1,5 @@
 import sys
+import time
 import stlearn as st
 st.settings.set_figure_params(dpi=300)
 from pathlib import Path
@@ -129,12 +130,15 @@ model = CNN_NB_multiple_genes((299, 299, 3), n_genes)
 callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20,
                                         restore_best_weights=False)
 
+start_train = time.perf_counter()
+
 train_history = model.fit(train_gen_,
                       epochs=100,
                       validation_data=valid_gen_,
                       callbacks=[callback]
                       )
 
+end_train = time.perf_counter()
 test_predictions = model.predict(test_gen__1)
 from scipy.stats import nbinom
 y_preds = []
@@ -159,11 +163,6 @@ for gene in pred_adata.var_names:
 
 df.to_csv("../results/stimage_cor_{}.csv".format(test_sample))
 
-
-
-
-
-
-
-
+with open("../results/stimage_times.txt", 'a') as f:
+    f.write(f"{test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 

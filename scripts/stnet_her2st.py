@@ -1,3 +1,4 @@
+import time
 import sys
 import stlearn as st
 st.settings.set_figure_params(dpi=300)
@@ -168,12 +169,14 @@ model = STNet((224, 224, 3), n_genes, mean_exp_tf)
 callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20,
                                         restore_best_weights=False)
 
+start_train = time.perf_counter()
 train_history = model.fit(train_gen_,
                       epochs=100,
                       validation_data=valid_gen_,
                       callbacks=[callback]
                       )
 
+end_train = time.perf_counter()
 test_predictions = model.predict(test_gen__1)
 
 test_dataset_1.obsm["predicted_gene"] = test_predictions
@@ -192,6 +195,8 @@ for gene in pred_adata.var_names:
 df.to_csv("../results/stnet_cor_{}.csv".format(test_sample))
 
 
+with open("../results/stnet_times.txt", 'a') as f:
+    f.write(f"{test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
 
 

@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 import sys
 # sys.path.append("../models/HisToGene")
@@ -699,15 +700,24 @@ dataset = ViT_HER2ST(train=True, fold=fold)
 train_loader = DataLoader(dataset, batch_size=1, num_workers=4, shuffle=True)
 model = HisToGene(n_layers=8, n_genes=n_genes, learning_rate=1e-5)
 trainer = pl.Trainer(gpus=1, max_epochs=100)
+
+start_train = time.perf_counter()
+
 trainer.fit(model, train_loader)
 #     trainer.save_checkpoint("model/last_train_"+tag+'_'+str(fold)+".ckpt")
 
 #     model = HisToGene.load_from_checkpoint("model/last_train_"+tag+'_'+str(fold)+".ckpt",n_layers=8, n_genes=n_genes, learning_rate=1e-5)
+
+end_train = time.perf_counter()
+
 device = torch.device('cuda')
 dataset = ViT_HER2ST(train=False,sr=False,fold=fold)
 test_loader = DataLoader(dataset, batch_size=1, num_workers=4)
+
+start_pred = time.perf_counter()
 adata_pred, adata_truth = model_predict(model, test_loader, attention=False, device = device)
 
+end_pred = time.perf_counter()
 adata_pred.var_names = gene_list
 adata_truth.var_names = gene_list
 
@@ -723,3 +733,6 @@ del model
 torch.cuda.empty_cache()
 
 df.to_csv("../../results/histogene_cor_{}.csv".format(test_sample))
+
+with open("../../results/histogene_times.txt", 'a') as f:
+    f.write(f"{test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
