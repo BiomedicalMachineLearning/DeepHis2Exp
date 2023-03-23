@@ -732,11 +732,11 @@ for gene in pred_adata.var_names:
 del model
 torch.cuda.empty_cache()
 
-df.to_csv("../../results/her2st/histogene_cor_{}.csv".format(test_sample))
+df.to_csv("../../results/ffpe/histogene_cor_{}.csv".format(test_sample))
 
-with open("../../results/her2st/histogene_times.txt", 'a') as f:
+with open("../../results/ffpe/histogene_times.txt", 'a') as f:
     f.write(f"{test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
-with open(f"../../results/her2st/histogene_preds_{test_sample}.pkl", 'wb') as f:
+with open(f"../../results/ffpe/histogene_preds_{test_sample}.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
 

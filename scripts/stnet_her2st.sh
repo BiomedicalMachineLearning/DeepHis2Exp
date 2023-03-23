@@ -8,14 +8,15 @@
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:tesla:1
 #SBATCH --job-name stnet
-#SBATCH --array=0
+#SBATCH --array=0-35
+
 module load cuda/11.0.2.450
 module load gnu7
 module load openmpi3
 module load anaconda/3.6
-source activate ../envs/stimage
+source activate ../envs/stimage_test
 
-PATH=../envs/stimage/bin:$PATH
+PATH=../envs/stimage_test/bin:$PATH
 
 # cd /scratch/imb/Xiao/STimage/development
 

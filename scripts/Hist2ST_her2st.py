@@ -26,7 +26,8 @@ def calculate_correlation(attr_1, attr_2):
 
 name=[*[f'A{i}' for i in range(2,7)],*[f'B{i}' for i in range(1,7)],
       *[f'C{i}' for i in range(1,7)],*[f'D{i}' for i in range(1,7)],
-      *[f'E{i}' for i in range(1,4)],*[f'F{i}' for i in range(1,4)],*[f'G{i}' for i in range(1,4)]]
+      *[f'E{i}' for i in range(1,4)],*[f'F{i}' for i in range(1,4)], *[f'G{i}' for i in range(1,4)]]
+
 patients = ['P2', 'P5', 'P9', 'P10']
 reps = ['rep1', 'rep2', 'rep3']
 skinname = []
@@ -106,8 +107,10 @@ for gene in pred_adata.var_names:
 del model
 torch.cuda.empty_cache()
 
-df.to_csv("../../results/hist2st_cor_{}.csv".format(test_sample))
+df.to_csv("../../results/her2st/hist2st_cor_{}.csv".format(test_sample))
 
-with open("../../results/hist2st_times.txt", 'a') as f:
+with open("../../results/her2st/hist2st_times.txt", 'a') as f:
     f.write(f"{test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
+with open(f"../../results/her2st/hist2st_preds_{test_sample}.pkl", 'wb') as f:
+    pickle.dump([pred_adata,test_dataset], f)

@@ -1,5 +1,5 @@
-import sys
 import time
+import sys
 import stlearn as st
 st.settings.set_figure_params(dpi=300)
 from pathlib import Path
@@ -25,7 +25,7 @@ from sklearn.neighbors import KDTree
 from anndata import read_h5ad
 from tensorflow.keras import backend as K
 import scanpy as sc
-
+import pickle
 import matplotlib.pyplot as plt
 from libpysal.weights.contiguity import Queen
 from libpysal import examples
@@ -38,8 +38,42 @@ from splot.esda import moran_scatterplot, lisa_cluster
 from esda.moran import Moran, Moran_Local
 from esda.moran import Moran_BV, Moran_Local_BV
 from splot.esda import plot_moran_bv_simulation, plot_moran_bv, plot_local_autocorrelation
-import pickle
+
 from scipy import stats
+from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input as preprocess_vgg16
+from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input as preprocess_resnet50
+from tensorflow.keras.applications.densenet import DenseNet121, preprocess_input as preprocess_densenet
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Input, concatenate, Dropout, Lambda
+from tensorflow.keras.models import Model
+from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.utils.tf_utils import is_tensor_or_variable
+
+
+def STNet(tile_shape, output_shape, mean_exp_tf):
+    tile_input = Input(shape=tile_shape, name = "tile_input")
+    DenseNet121_base = DenseNet121(input_tensor=tile_input, weights='imagenet', include_top=False)
+    for layer in DenseNet121_base.layers:
+        layer.trainable = False
+    
+    cnn = DenseNet121_base.output
+    cnn = GlobalAveragePooling2D()(cnn)
+#     cnn = Dropout(0.5)(cnn)
+#     cnn = Dense(256, activation='relu', kernel_regularizer=tf.keras.regularizers.l1(0.01),
+#                 activity_regularizer=tf.keras.regularizers.l2(0.01))(cnn)
+    # cnn = Dense(256, activation='relu')(cnn)
+    
+    outputs = Dense(output_shape, activation='linear', bias_initializer=mean_exp_tf)(cnn)
+    model = Model(inputs=tile_input, outputs=outputs)
+
+#     optimizer = tf.keras.optimizers.RMSprop(0.001)
+    optimizer = tf.keras.optimizers.SGD(learning_rate=1e-6, momentum=0.9)
+
+    model.compile(loss="mse",
+                  optimizer=optimizer,
+                  metrics=[tf.keras.metrics.MeanSquaredError()])    
+    return model
+
+
 
 def plot_correlation(df, attr_1, attr_2):
     r = stats.pearsonr(df[attr_1], 
@@ -69,8 +103,7 @@ def calculate_correlation_2(attr_1, attr_2):
 
 
 DATA_PATH = Path("../data/her2st")
-
-adata_all = read_h5ad(DATA_PATH / "all_adata.h5ad")
+adata_all = read_h5ad(DATA_PATH / "all_adata_no_normal_224.h5ad")
 adata_all.obs['tile_path'] = adata_all.obs['tile_path'].apply(lambda x: x.replace('/clusterdata/uqxtan9/Q1851/Xiao/Working_project/','../data/'))
 
 # adata_all = ensembl_to_id(adata_all)
@@ -83,6 +116,8 @@ samples = adata_all.obs["library_id"].unique().tolist()
 gene_list_path = "./gene_list.pkl"
 with open(gene_list_path, 'rb') as f:
     gene_list = pickle.load(f)
+
+
 
 df = pd.DataFrame()
 
@@ -104,34 +139,37 @@ test_dataset_1 = adata_all[test_index,].copy()
 
 
 train_gen = tf.data.Dataset.from_generator(
-        lambda:DataGenerator(adata=training_dataset, 
-                      genes=gene_list, aug=False),
-        output_types=(tf.float32, tuple([tf.float32]*n_genes)), 
-        output_shapes=([299,299,3], tuple([1]*n_genes))
+            lambda:DataGenerator(adata=training_dataset, 
+                          genes=gene_list, aug=False, dim=(224, 224)),
+            output_types=(tf.float32, tuple([tf.float32]*n_genes)), 
+            output_shapes=([224,224,3], tuple([1]*n_genes))
 )
 train_gen_ = train_gen.shuffle(buffer_size=500).batch(32).repeat(1).cache().prefetch(tf.data.experimental.AUTOTUNE)
 valid_gen = tf.data.Dataset.from_generator(
-        lambda:DataGenerator(adata=valid_dataset, 
-                      genes=gene_list), 
-        output_types=(tf.float32, tuple([tf.float32]*n_genes)), 
-        output_shapes=([299,299,3], tuple([1]*n_genes))
+            lambda:DataGenerator(adata=valid_dataset, 
+                          genes=gene_list, dim=(224, 224)), 
+            output_types=(tf.float32, tuple([tf.float32]*n_genes)), 
+            output_shapes=([224,224,3], tuple([1]*n_genes))
 )
 valid_gen_ = valid_gen.shuffle(buffer_size=500).batch(32).repeat(1).cache().prefetch(tf.data.experimental.AUTOTUNE)
 test_gen_1 = tf.data.Dataset.from_generator(
-        lambda:DataGenerator(adata=test_dataset_1, 
-                      genes=gene_list), 
-        output_types=(tf.float32, tuple([tf.float32]*n_genes)), 
-        output_shapes=([299,299,3], tuple([1]*n_genes))
+            lambda:DataGenerator(adata=test_dataset_1, 
+                          genes=gene_list, dim=(224, 224)), 
+            output_types=(tf.float32, tuple([tf.float32]*n_genes)), 
+            output_shapes=([224,224,3], tuple([1]*n_genes))
 )
 test_gen__1 = test_gen_1.batch(1)
 
+
 K.clear_session()
-model = CNN_NB_multiple_genes((299, 299, 3), n_genes)
+mean_exp = training_dataset[:,gene_list].to_df().mean()
+mean_exp_tf = tf.keras.initializers.RandomUniform(minval=mean_exp, 
+                                                  maxval=mean_exp)
+model = STNet((224, 224, 3), n_genes, mean_exp_tf)
 callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20,
                                         restore_best_weights=False)
 
 start_train = time.perf_counter()
-
 train_history = model.fit(train_gen_,
                       epochs=100,
                       validation_data=valid_gen_,
@@ -140,15 +178,8 @@ train_history = model.fit(train_gen_,
 
 end_train = time.perf_counter()
 test_predictions = model.predict(test_gen__1)
-from scipy.stats import nbinom
-y_preds = []
-for i in range(n_genes):
-    n = test_predictions[i][:, 0]
-    p = test_predictions[i][:, 1]
-    y_pred = nbinom.mean(n, p)
-    y_preds.append(y_pred)
-test_dataset_1.obsm["predicted_gene"] = np.array(y_preds).transpose()
 
+test_dataset_1.obsm["predicted_gene"] = test_predictions
 test_dataset_1_ = test_dataset_1[:,gene_list].copy()
 test_dataset_1_.X = test_dataset_1_.obsm["predicted_gene"]
 
@@ -157,15 +188,20 @@ test_dataset = test_dataset_1
 
 for gene in pred_adata.var_names:
     cor_val = calculate_correlation(pred_adata.to_df().loc[:,gene], test_dataset.to_df().loc[:,gene])
-    df = df.append(pd.Series([gene, cor_val, test_sample, "STimage"], 
+    df = df.append(pd.Series([gene, cor_val, test_sample, "STnet"], 
                          index=["Gene", "Pearson correlation", "Slide", "Method"]),
                   ignore_index=True)
 
-df.to_csv("../results/her2st/stimage_cor_{}.csv".format(test_sample))
+df.to_csv("../results/ffpe/stnet_cor_{}.csv".format(test_sample))
 
-with open("../results/her2st/stimage_times.txt", 'a') as f:
+
+with open("../results/ffpe/stnet_times.txt", 'a') as f:
     f.write(f"{test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
-with open(f"../results/her2st/stimage_preds_{test_sample}.pkl", 'wb') as f:
+with open(f"../results/ffpe/stnet_preds_{test_sample}.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
+
+
+
+
 

@@ -8,7 +8,7 @@
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:tesla:1
 #SBATCH --job-name histogene
-#SBATCH --array=0
+#SBATCH --array=0-35
 module load cuda/11.0.2.450
 module load gnu7
 module load openmpi3
