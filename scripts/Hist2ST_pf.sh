@@ -8,7 +8,7 @@
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:tesla-smx2:1
 #SBATCH --job-name hist2st-pf
-#SBATCH --array=0
+#SBATCH --array=0-9
 #module load cuda/11.0.2.450
 #module load gnu7
 #module load openmpi3

@@ -19,6 +19,7 @@ STIMAGE
 Python: NO (need correct test sample)
 Bash: done
 Checked: NO
+COMMENT: May possibly need to rerun everything and check if top250 works properly, looks like it defaults to 1000HVG for some reason
 
 HISTOGENE
 Python: done

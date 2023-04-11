@@ -18,6 +18,7 @@ def adata_img_crop_tissue(adata, img, out_dim):
 
 def window_adata(adata_dict, sizes):
     "Window every element in `adata_dict'"
+    size_dict = {}
     for i,k in enumerate(adata_dict):
         size_dict[k] = sizes[i]
 

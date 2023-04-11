@@ -83,15 +83,22 @@ adata_dict1 = {name: read_visium(path, library_id = name, source_image_path = pa
 
 adata_dict0 = {**adata_dict1}
 
+for k,v in adata_dict0.items():
+    v.obsm["spatial"] = v.obsm["spatial"].astype(np.int64)
+    v.obs[['in_tissue','array_row','array_col']] = v.obs[['in_tissue','array_row','array_col']].astype(np.int64)
+
+
 sizes = [3000 for i in range(len(adata_dict0))]
 
 adata_dict = window_adata(adata_dict0, sizes)
 
-gene_list = read_gene_set("../../data/pfizer/") # all_adata.h5ad
+# gene_list = read_gene_set("../../data/pfizer/") # all_adata.h5ad
+gene_list = ['CD4', 'TRAC', 'CXCR4']
+gene_list = set(gene_list)
+
 gene_list = intersect_section_genes(gene_list, adata_dict)
 n_genes = len(gene_list)
 
-train_set = list(set(list(adata_dict.keys())) - set([i for i in list(adata_dict.keys()) if 'VLP78_A' in i]))
 
 
 from data_vit import ViT_Anndata
@@ -112,9 +119,9 @@ torch.backends.cudnn.deterministic = True
 df = pd.DataFrame()
 i = int(sys.argv[1])
 # i=1
-# fold = i
-# test_sample = names[fold]
-
+fold = i
+test_sample = samps1[fold]
+fold2name = dict(enumerate(samps1))
 
 
 
@@ -122,10 +129,14 @@ i = int(sys.argv[1])
 #            "TFF3", "ATP1A1", "B2M", "FASN", "SPARC", "CD74", "CD63", "CD24", "CD81"]
 # genes = len(gene_list)
 
+train_set = list(set(list(adata_dict.keys())) - set([i for i in list(adata_dict.keys()) if test_sample in i]))
 
 trainset = ViT_Anndata(adata_dict = adata_dict, train_set = train_set, gene_list = gene_list,
             train=True,flatten=False,adj=True,ori=True,prune='NA',neighs=4, 
         )
+
+print("LOADED TRAINSET")
+
 
 train_loader = DataLoader(trainset, batch_size=1, num_workers=0, shuffle=True)
 
@@ -139,7 +150,7 @@ model=Hist2ST(
 
 logger=None
 trainer = pl.Trainer(
-    gpus=[0], max_epochs=100,
+    gpus=[0], max_epochs=1,
     logger=logger,
 )
 
@@ -151,47 +162,114 @@ import os
 if not os.path.isdir("../../trained_models/"):
     os.mkdir("../../trained_models/")
 
-torch.save(model.state_dict(),f"../trained_models/{fold}-Hist2ST.ckpt")
+torch.save(model.state_dict(),f"../../trained_models/{fold}-Hist2ST.ckpt")
 
-
-def evall(test_sample, gene_list):
+# Some local variable referencing error when model is inside function
+##########################
+# def evall(test_sample, gene_list):
     
-    train_set = list(set(list(adata_dict.keys())) - set([test_sample]))
-    testset = ViT_Anndata(adata_dict = adata_dict, train_set = train_set, gene_list = gene_list,
-                train=False,flatten=False,adj=True,ori=True,prune='NA',neighs=4, 
-            )
-    test_loader = DataLoader(testset, batch_size=1, num_workers=0, shuffle=False)
+#     train_set = list(set(list(adata_dict.keys())) - set(test_sample))
+#     testset = ViT_Anndata(adata_dict = adata_dict, train_set = train_set, gene_list = gene_list,
+#                 train=False,flatten=False,adj=True,ori=True,prune='NA',neighs=4, 
+#             )
+#     test_loader = DataLoader(testset, batch_size=1, num_workers=0, shuffle=False)
 
-    adata_pred, adata_truth = test(model, test_loader,'cuda')
+#     adata_pred, adata_truth = test(model, test_loader,'cuda')
 
-    adata_pred.var_names = gene_list
-    adata_truth.var_names = gene_list
+#     adata_pred.var_names = gene_list
+#     adata_truth.var_names = gene_list
 
-    pred_adata = adata_pred.copy()
-    test_dataset = adata_truth.copy()
+#     pred_adata = adata_pred.copy()
+#     test_dataset = adata_truth.copy()
     
-    test_sample = ','.join(list(test_sample))
+#     test_sample = ','.join(list(test_sample))
     
-    with open(f"../../results/pf/hist2st_preds_{test_sample}_{i}.pkl", 'wb') as f:
-        pickle.dump([pred_adata,test_dataset], f)
+#     with open(f"../../results/pf/hist2st_preds_{test_sample}_{i}.pkl", 'wb') as f:
+#         pickle.dump([pred_adata,test_dataset], f)
 
-    for gene in pred_adata.var_names:
-        cor_val = calculate_correlation(pred_adata.to_df().loc[:,gene], test_dataset.to_df().loc[:,gene])
-        df = df.append(pd.Series([gene, cor_val, test_sample, "Hist2ST"], 
-                             index=["Gene", "Pearson correlation", "Slide", "Method"]),
-                  ignore_index=True)
+#     for gene in pred_adata.var_names:
+#         cor_val = calculate_correlation(pred_adata.to_df().loc[:,gene], test_dataset.to_df().loc[:,gene])
+#         df = df.append(pd.Series([gene, cor_val, test_sample, "Hist2ST"], 
+#                              index=["Gene", "Pearson correlation", "Slide", "Method"]),
+#                   ignore_index=True)
 
-    del model
-    torch.cuda.empty_cache()
+#     del model
+#     torch.cuda.empty_cache()
 
-    df.to_csv("../../results/pf/hist2st_cor_{}_{i}.csv".format(test_sample, i))
+#     df.to_csv("../../results/pf/hist2st_cor_{}_{i}.csv".format(test_sample, i))
 
-    with open("../../results/pf/hist2st_times.txt", 'a') as f:
-        f.write(f"{i} {test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
+#     with open("../../results/pf/hist2st_times.txt", 'a') as f:
+#         f.write(f"{i} {test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
 
 
-evall([i for i in list(adata_dict.keys()) if 'VLP78_A' in i], gene_list)
+# evall([i for i in list(adata_dict.keys()) if 'VLP78_A' in i], gene_list)
+
+def test(model,test,device='cuda'):
+    model=model.to(device)
+    model.eval()
+    preds=None
+    ct=None
+    gt=None
+    loss=0
+    adatas,adata_gts = [],[]
+    with torch.no_grad():
+        for patch, position, exp, adj, *_, center in tqdm(test):
+            patch, position, adj = patch.to(device), position.to(device), adj.to(device).squeeze(0)
+            pred = model(patch, position, adj)[0]
+            preds = pred.squeeze().cpu().numpy()
+            ct = center.squeeze().cpu().numpy()
+            gt = exp.squeeze().cpu().numpy()
+            adata = ad.AnnData(preds)
+            adata.obsm['spatial'] = ct
+            adata_gt = ad.AnnData(gt)
+            adata_gt.obsm['spatial'] = ct
+           
+            adatas.append(adata)
+            adata_gts.append(adata_gt)
+    adata = ad.concat(adatas)
+    adata_gt = ad.concat(adata_gts)
+    return adata,adata_gt
+
+
+
+test_sample = [i for i in list(adata_dict.keys()) if test_sample in i]
+train_set = list(set(list(adata_dict.keys())) - set(test_sample))
+testset = ViT_Anndata(adata_dict = adata_dict, train_set = train_set, gene_list = gene_list,
+            train=False,flatten=False,adj=True,ori=True,prune='NA',neighs=4, 
+        )
+test_loader = DataLoader(testset, batch_size=1, num_workers=0, shuffle=False)
+
+
+adata_pred, adata_truth = test(model, test_loader,'cuda')
+
+adata_pred.var_names = gene_list
+adata_truth.var_names = gene_list
+
+pred_adata = adata_pred.copy()
+test_dataset = adata_truth.copy()
+
+test_sample = ','.join(list(test_sample))
+
+with open(f"../../results/pf/hist2st_preds_{test_sample}.pkl", 'wb') as f:
+    pickle.dump([pred_adata,test_dataset], f)
+
+for gene in pred_adata.var_names:
+    pred = pred_adata.to_df().loc[:,gene]
+    pred = pred.fillna(0)
+    cor_val = calculate_correlation(pred, test_dataset.to_df().loc[:,gene])
+    df = df.append(pd.Series([gene, cor_val, test_sample, "Hist2ST"], 
+                         index=["Gene", "Pearson correlation", "Slide", "Method"]),
+              ignore_index=True)
+
+del model
+torch.cuda.empty_cache()
+
+df.to_csv("../../results/pf/hist2st_cor_{}.csv".format(test_sample))
+
+with open("../../results/pf/hist2st_times.txt", 'a') as f:
+    f.write(f"{i} {test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
+
 
 # gene_list = ["COX6C","TTLL12", "HSP90AB1", 
 #            "TFF3", "ATP1A1", "B2M", "FASN", "SPARC", "CD74", "CD63", "CD24", "CD81"]

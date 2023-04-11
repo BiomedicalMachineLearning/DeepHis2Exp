@@ -743,7 +743,7 @@ device = torch.device('cuda')
 
 def evall(test_sample, gene_list):
     
-    train_set = list(set(list(adata_dict.keys())) - set([test_sample]))
+    train_set = list(set(list(adata_dict.keys())) - set(test_sample))
     testset = ViT_Anndata(adata_dict = adata_dict, train_set = train_set, gene_list = gene_list,
                 train=False,flatten=True,adj=True,ori=True,prune='NA',neighs=4, 
             )

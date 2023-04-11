@@ -23,11 +23,14 @@ cd ../models/STimage/stimage/
 
 # time python 01_Preprocessing.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
 
+time python 02_Training_DUMMY.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
 # time python 02_Training.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
 
-time python 03_Prediction.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
+# time python 03_Prediction.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
   
+# Pretty sure this does nothing
 # time python 04_Interpretation.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
  
 # time python 05_Visualisation.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
+# time python 05_Visualisation_MOD.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
 

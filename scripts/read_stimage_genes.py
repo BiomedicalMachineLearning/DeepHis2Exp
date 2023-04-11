@@ -17,6 +17,15 @@ def read_gene_set(path):
                                                               ).index[0:250]
     return set(comm_genes)
 
+def read_gene_set_hvg(path):
+    DATA_PATH = Path(path)
+    adata_all = read_h5ad(DATA_PATH / "train_adata.h5ad")
+    adata_all = read_h5ad(DATA_PATH / "train_adata.h5ad")
+    comm_genes = adata_all.var_names[adata_all.var.highly_variable]
+    return set(comm_genes)
+
+
+
 def intersect_section_genes(geneset, adata_dict):
     comm_genes = geneset.intersection(*[set(v.var_names) for k,v in adata_dict.items()])
     return list(comm_genes)
