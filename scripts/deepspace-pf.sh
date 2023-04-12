@@ -25,4 +25,4 @@ export SINGULARITY_LOCALCACHEDIR=$SINGULARITY_CACHEDIR/localcache
 export SINGULARITY_PULLFOLDER=$SINGULARITY_CACHEDIR/pull
 
 chmod +x train-pf-cv.sh
-singularity exec --nv deepspace_v1.0.sif /bin/sh train-pf-cv.sh 
+singularity exec --nv deepspace_v1.0.sif bash train-pf-cv.sh 

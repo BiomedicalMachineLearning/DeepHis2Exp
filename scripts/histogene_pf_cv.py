@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from vis_model import HisToGene
 from utils import *
-from predict import model_predict, sr_predict
+from predict import *
 from dataset import ViT_HER2ST, ViT_SKIN
 
 import pickle
@@ -44,6 +44,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 Image.MAX_IMAGE_PIXELS = None
+
+from scanpy import read_visium, read_10x_mtx
 
 BCELL = ['CD19', 'CD79A', 'CD79B', 'MS4A1']
 TUMOR = ['FASN']
@@ -732,6 +734,8 @@ df = pd.DataFrame()
 i = int(sys.argv[1])
 fold = i
 test_sample = samps1[fold]
+test_sample_orig = samps1[fold]
+
 # test_sample = names[fold]
 # print("process {}".format(test_sample))
 tag = 'pf'+test_sample
@@ -757,12 +761,54 @@ end_train = time.perf_counter()
 
 device = torch.device('cuda')
 
-    
-train_set = list(set(list(adata_dict.keys())) - set(test_sample))
-testset = ViT_Anndata(adata_dict = adata_dict, train_set = train_set, gene_list = gene_list,
+test_sample = [i for i in list(adata_dict.keys()) if test_sample in i]
+test_set = list(set(list(adata_dict.keys())) - set(test_sample))    
+testset = ViT_Anndata(adata_dict = adata_dict, train_set = test_set, gene_list = gene_list,
             train=False,flatten=True,adj=True,ori=True,prune='NA',neighs=4, 
         )
 test_loader = DataLoader(testset, batch_size=1, num_workers=0, shuffle=False)
+
+from tqdm import tqdm
+
+def model_predict(model, test_loader, adata=None, attention=True, device = torch.device('cpu')): 
+    model.eval()
+    model = model.to(device)
+    preds = None
+    adatas,adata_gts = [],[]
+    with torch.no_grad():
+        for patch, position, exp, center in tqdm(test_loader):
+
+            patch, position = patch.to(device), position.to(device)
+            
+            pred = model(patch, position)
+
+
+            if preds is None:
+                preds = pred.squeeze()
+                ct = center
+                gt = exp
+            else:
+                preds = torch.cat((preds,pred),dim=0)
+                ct = torch.cat((ct,center),dim=0)
+                gt = torch.cat((gt,exp),dim=0)
+                
+            preds = preds.cpu().squeeze().numpy()
+            ct = ct.cpu().squeeze().numpy()
+            gt = gt.cpu().squeeze().numpy()
+            adata = ann.AnnData(preds)
+            adata.obsm['spatial'] = ct
+
+            adata_gt = ann.AnnData(gt)
+            adata_gt.obsm['spatial'] = ct
+
+            adatas.append(adata)
+            adata_gts.append(adata_gt)
+
+    adata = ad.concat(adatas)
+    adata_gt = ad.concat(adata_gts)
+
+    return adata, adata_gt
+
 
 adata_pred, adata_truth = model_predict(model, test_loader, attention=False, device = device)
 
@@ -774,7 +820,7 @@ test_dataset = adata_truth.copy()
 
 # test_sample = ','.join(list(test_sample))
 
-with open(f"../../results/pf_cv/histogene_preds_{test_sample}_{i}.pkl", 'wb') as f:
+with open(f"../../results/pf_cv/histogene_preds_{test_sample_orig}_{i}.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
 
 for gene in pred_adata.var_names:
@@ -782,17 +828,17 @@ for gene in pred_adata.var_names:
     pred = pred.fillna(0)
     cor_val = calculate_correlation_2(pred, test_dataset.to_df().loc[:,gene])
     cor_pearson = calculate_correlation(pred, test_dataset.to_df().loc[:,gene])
-    df = df.append(pd.Series([gene, cor_val,cor_pearson, test_sample, "HisToGene"], 
+    df = df.append(pd.Series([gene, cor_val,cor_pearson, test_sample_orig, "HisToGene"], 
                          index=["Gene", "Spearman correlation", "Pearson correlation","Slide", "Method"]),
               ignore_index=True)
 
 del model
 torch.cuda.empty_cache()
 
-df.to_csv("../../results/pf_cv/histogene_cor_{}_{i}.csv".format(test_sample, i))
+df.to_csv("../../results/pf_cv/histogene_cor_{}_{i}.csv".format(test_sample_orig, i))
 
 with open("../../results/pf_cv/histogene_times.txt", 'a') as f:
-    f.write(f"{i} {test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
+    f.write(f"{i} {test_sample_orig} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
 
 

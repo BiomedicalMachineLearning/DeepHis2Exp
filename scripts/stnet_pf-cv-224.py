@@ -56,88 +56,88 @@ from sklearn.neighbors import KDTree
 
 import numpy as np
 
-def center_crop(img, new_width=None, new_height=None):        
+# def center_crop(img, new_width=None, new_height=None):        
 
-    width = img.shape[1]
-    height = img.shape[0]
+#     width = img.shape[1]
+#     height = img.shape[0]
 
-    if new_width is None:
-        new_width = min(width, height)
+#     if new_width is None:
+#         new_width = min(width, height)
 
-    if new_height is None:
-        new_height = min(width, height)
+#     if new_height is None:
+#         new_height = min(width, height)
 
-    left = int(np.ceil((width - new_width) / 2))
-    right = width - int(np.floor((width - new_width) / 2))
+#     left = int(np.ceil((width - new_width) / 2))
+#     right = width - int(np.floor((width - new_width) / 2))
 
-    top = int(np.ceil((height - new_height) / 2))
-    bottom = height - int(np.floor((height - new_height) / 2))
+#     top = int(np.ceil((height - new_height) / 2))
+#     bottom = height - int(np.floor((height - new_height) / 2))
 
-    if len(img.shape) == 2:
-        center_cropped_img = img[top:bottom, left:right]
-    else:
-        center_cropped_img = img[top:bottom, left:right, ...]
+#     if len(img.shape) == 2:
+#         center_cropped_img = img[top:bottom, left:right]
+#     else:
+#         center_cropped_img = img[top:bottom, left:right, ...]
 
-    return center_cropped_img
+#     return center_cropped_img
 
-class DataGenerator(keras.utils.Sequence):
-    """
-    data generator for multiple branches gene prediction model
-    """
+# class DataGenerator(keras.utils.Sequence):
+#     """
+#     data generator for multiple branches gene prediction model
+#     """
 
-    def __init__(self, adata, dim=(299, 299), n_channels=3, genes=None, aug=False, tile_path="tile_path"):
-        'Initialization'
-        self.dim = (224,224)
-        self.adata = adata
-        self.n_channels = n_channels
-        self.genes = genes
-        self.num_genes = len(genes)
-        self.aug = aug
-        self.tile_path = tile_path
-        self.on_epoch_end()
+#     def __init__(self, adata, dim=(299, 299), n_channels=3, genes=None, aug=False, tile_path="tile_path"):
+#         'Initialization'
+#         self.dim = (224,224)
+#         self.adata = adata
+#         self.n_channels = n_channels
+#         self.genes = genes
+#         self.num_genes = len(genes)
+#         self.aug = aug
+#         self.tile_path = tile_path
+#         self.on_epoch_end()
 
-    def __len__(self):
-        'Denotes the number of batches per epoch'
-        return int(self.adata.n_obs)
+#     def __len__(self):
+#         'Denotes the number of batches per epoch'
+#         return int(self.adata.n_obs)
 
-    def __getitem__(self, index):
-        'Generate one batch of data'
-        # Find list of IDs
-        obs_temp = self.adata.obs_names[index]
+#     def __getitem__(self, index):
+#         'Generate one batch of data'
+#         # Find list of IDs
+#         obs_temp = self.adata.obs_names[index]
 
-        # Generate data
-        X_img = self._load_img(obs_temp)
-        y = self._load_label(obs_temp)
+#         # Generate data
+#         X_img = self._load_img(obs_temp)
+#         y = self._load_label(obs_temp)
 
-        return X_img, y
+#         return X_img, y
 
-    def on_epoch_end(self):
-        'Updates indexes after each epoch'
-        self.indexes = np.arange(self.adata.n_obs)
+#     def on_epoch_end(self):
+#         'Updates indexes after each epoch'
+#         self.indexes = np.arange(self.adata.n_obs)
 
-    def _load_img(self, obs):
-        img_path = self.adata.obs.loc[obs, 'tile_path']
-        # X_img = image.load_img(img_path, target_size=self.dim)
-        X_img = image.load_img(img_path)
-        X_img = image.img_to_array(X_img).astype('uint8')
+#     def _load_img(self, obs):
+#         img_path = self.adata.obs.loc[obs, 'tile_path']
+#         # X_img = image.load_img(img_path, target_size=self.dim)
+#         X_img = image.load_img(img_path)
+#         X_img = image.img_to_array(X_img).astype('uint8')
         
-        X_img = center_crop(X_img,new_width=224, new_height=224)
+#         X_img = center_crop(X_img,new_width=224, new_height=224)
         
-        #         X_img = np.expand_dims(X_img, axis=0)
-        #         n_rotate = np.random.randint(0, 4)
-        #         X_img = np.rot90(X_img, k=n_rotate, axes=(1, 2))
-        if self.aug:
-            X_img = seq_aug(image=X_img)
-#         X_img = preprocess_resnet(X_img)
-        return X_img
+#         #         X_img = np.expand_dims(X_img, axis=0)
+#         #         n_rotate = np.random.randint(0, 4)
+#         #         X_img = np.rot90(X_img, k=n_rotate, axes=(1, 2))
+#         if self.aug:
+#             X_img = seq_aug(image=X_img)
+# #         X_img = preprocess_resnet(X_img)
+#         return X_img
 
-    def _load_label(self, obs):
-        batch_adata = self.adata[obs, self.genes].copy()
+#     def _load_label(self, obs):
+#         batch_adata = self.adata[obs, self.genes].copy()
 
-        return tuple([batch_adata.to_df()[i].values for i in self.genes])
+#         return tuple([batch_adata.to_df()[i].values for i in self.genes])
 
-    def get_classes(self):
-        return self.adata.to_df().loc[:, self.genes]
+#     def get_classes(self):
+#         return self.adata.to_df().loc[:, self.genes]
 
 
 def STNet(tile_shape, output_shape, mean_exp_tf):
@@ -194,7 +194,7 @@ def calculate_correlation_2(attr_1, attr_2):
 
 
 DATA_PATH = Path("../data/pfizer")
-adata_all = read_h5ad(DATA_PATH / "all_adata.h5ad")
+adata_all = read_h5ad(DATA_PATH / "all_adata_224.h5ad")
 # adata_all.obs['tile_path'] = adata_all.obs['tile_path'].apply(lambda x: x.replace('/clusterdata/uqxtan9/Q1851/Xiao/Working_project/','../data/'))
 
 # adata_all = ensembl_to_id(adata_all)
@@ -273,7 +273,6 @@ train_history = model.fit(train_gen_,
                       )
 
 end_train = time.perf_counter()
-print("finished training")
 test_predictions = model.predict(test_gen__1)
 
 test_dataset_1.obsm["predicted_gene"] = test_predictions

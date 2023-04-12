@@ -171,6 +171,8 @@ with open(f"../results/pf_cv/stimage_preds_{test_sample}.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
 
 for gene in pred_adata.var_names:
+    pred = pred_adata.to_df().loc[:,gene]
+    pred = pred.fillna(0)
     cor_val = calculate_correlation_2(pred, test_dataset.to_df().loc[:,gene])
     cor_pearson = calculate_correlation(pred, test_dataset.to_df().loc[:,gene])
     df = df.append(pd.Series([gene, cor_val,cor_pearson, test_sample, "STimage"], 

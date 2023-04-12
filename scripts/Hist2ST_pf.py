@@ -16,6 +16,7 @@ from predict import *
 from HIST2ST import *
 from dataset import ViT_HER2ST, ViT_SKIN
 from scipy.stats import pearsonr,spearmanr
+from scipy import stats
 from torch.utils.data import DataLoader
 from pytorch_lightning.loggers import TensorBoardLogger
 from copy import deepcopy as dcp
@@ -129,6 +130,8 @@ i = int(sys.argv[1])
 # i=1
 fold = i
 test_sample = samps1[fold]
+test_sample_orig = samps1[fold]
+
 fold2name = dict(enumerate(samps1))
 
 
@@ -170,7 +173,7 @@ import os
 if not os.path.isdir("../../trained_models/"):
     os.mkdir("../../trained_models/")
 
-torch.save(model.state_dict(),f"../../trained_models/{test_sample}-Hist2ST.ckpt")
+torch.save(model.state_dict(),f"../../trained_models/{test_sample_orig}-Hist2ST.ckpt")
 
 # Some local variable referencing error when model is inside function
 ##########################
@@ -242,8 +245,8 @@ def test(model,test,device='cuda'):
 
 
 test_sample = [i for i in list(adata_dict.keys()) if test_sample in i]
-train_set = list(set(list(adata_dict.keys())) - set(test_sample))
-testset = ViT_Anndata(adata_dict = adata_dict, train_set = train_set, gene_list = gene_list,
+test_set = list(set(list(adata_dict.keys())) - set(test_sample))
+testset = ViT_Anndata(adata_dict = adata_dict, train_set = test_set, gene_list = gene_list,
             train=False,flatten=False,adj=True,ori=True,prune='NA',neighs=4, 
         )
 test_loader = DataLoader(testset, batch_size=1, num_workers=0, shuffle=False)
@@ -259,7 +262,7 @@ test_dataset = adata_truth.copy()
 
 # test_sample = ','.join(list(test_sample))
 
-with open(f"../../results/pf_cv/hist2st_preds_{test_sample}.pkl", 'wb') as f:
+with open(f"../../results/pf_cv/hist2st_preds_{test_sample_orig}.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
 
 for gene in pred_adata.var_names:
@@ -267,17 +270,17 @@ for gene in pred_adata.var_names:
     pred = pred.fillna(0)
     cor_val = calculate_correlation_2(pred, test_dataset.to_df().loc[:,gene])
     cor_pearson = calculate_correlation(pred, test_dataset.to_df().loc[:,gene])
-    df = df.append(pd.Series([gene, cor_val,cor_pearson, test_sample, "Hist2ST"], 
+    df = df.append(pd.Series([gene, cor_val,cor_pearson, test_sample_orig, "Hist2ST"], 
                          index=["Gene", "Spearman correlation", "Pearson correlation","Slide", "Method"]),
               ignore_index=True)
 
 del model
 torch.cuda.empty_cache()
 
-df.to_csv("../../results/pf_cv/hist2st_cor_{}.csv".format(test_sample))
+df.to_csv("../../results/pf_cv/hist2st_cor_{}.csv".format(test_sample_orig))
 
 with open("../../results/pf_cv/hist2st_times.txt", 'a') as f:
-    f.write(f"{i} {test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
+    f.write(f"{i} {test_sample_orig} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
 
 # gene_list = ["COX6C","TTLL12", "HSP90AB1", 

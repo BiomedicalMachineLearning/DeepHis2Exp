@@ -2,7 +2,7 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 24
-#SBATCH --mem=75000
+#SBATCH --mem=100000
 #SBATCH -o out_%x_%j.txt
 #SBATCH -e error_%x_%j.txt
 #SBATCH --partition=gpu
@@ -19,4 +19,4 @@ source activate ../envs/stimage_test
 
 PATH=../envs/stimage_test/bin:$PATH
 
-python ./stnet_pf-cv.py $SLURM_ARRAY_TASK_ID
+python ./stnet_pf-cv-224.py $SLURM_ARRAY_TASK_ID

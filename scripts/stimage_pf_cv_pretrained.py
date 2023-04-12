@@ -134,7 +134,7 @@ test_gen__1 = test_gen_1.batch(1)
 K.clear_session()
 model = CNN_NB_multiple_genes((299, 299, 3), n_genes)
 WEIGHT_PATH = Path("/clusterdata/uqjxie6/Q2051/STimage_project/pretrained_model")
-model.load_weights(OUT_PATH / "CNN_NB_1000HVG.h5")
+model.load_weights(WEIGHT_PATH / "CNN_NB_1000HVG.h5")
 callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20,
                                         restore_best_weights=False)
 
@@ -171,6 +171,8 @@ with open(f"../results/pf_cv/stimage_preds_{test_sample}_pretrained.pkl", 'wb') 
     pickle.dump([pred_adata,test_dataset], f)
 
 for gene in pred_adata.var_names:
+    pred = pred_adata.to_df().loc[:,gene]
+    pred = pred.fillna(0)
     cor_val = calculate_correlation_2(pred, test_dataset.to_df().loc[:,gene])
     cor_pearson = calculate_correlation(pred, test_dataset.to_df().loc[:,gene])
     df = df.append(pd.Series([gene, cor_val,cor_pearson, test_sample, "STimage"], 
