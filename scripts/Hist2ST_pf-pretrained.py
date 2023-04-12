@@ -68,7 +68,12 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 def calculate_correlation(attr_1, attr_2):
-    r = spearmanr(attr_1, 
+    r = stats.pearsonr(attr_1, 
+                       attr_2)[0]
+    return r
+
+def calculate_correlation_2(attr_1, attr_2):
+    r = stats.spearmanr(attr_1, 
                        attr_2)[0]
     return r
 
@@ -252,7 +257,7 @@ adata_truth.var_names = gene_list
 pred_adata = adata_pred.copy()
 test_dataset = adata_truth.copy()
 
-test_sample = ','.join(list(test_sample))
+# test_sample = ','.join(list(test_sample))
 
 with open(f"../../results/pf_cv/hist2st_preds_{test_sample}_pretrained.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
@@ -260,9 +265,10 @@ with open(f"../../results/pf_cv/hist2st_preds_{test_sample}_pretrained.pkl", 'wb
 for gene in pred_adata.var_names:
     pred = pred_adata.to_df().loc[:,gene]
     pred = pred.fillna(0)
-    cor_val = calculate_correlation(pred, test_dataset.to_df().loc[:,gene])
-    df = df.append(pd.Series([gene, cor_val, test_sample, "Hist2ST"], 
-                         index=["Gene", "Pearson correlation", "Slide", "Method"]),
+    cor_val = calculate_correlation_2(pred, test_dataset.to_df().loc[:,gene])
+    cor_pearson = calculate_correlation(pred, test_dataset.to_df().loc[:,gene])
+    df = df.append(pd.Series([gene, cor_val,cor_pearson, test_sample, "Hist2ST"], 
+                         index=["Gene", "Spearman correlation", "Pearson correlation","Slide", "Method"]),
               ignore_index=True)
 
 del model

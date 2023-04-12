@@ -7,7 +7,7 @@
 #SBATCH -e error_%x_%j.txt
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:tesla-smx2:1
-#SBATCH --job-name histogene-pf
+#SBATCH --job-name hist2st-pf
 #SBATCH --array=0
 #module load cuda/11.0.2.450
 #module load gnu7
@@ -20,6 +20,10 @@ PATH=${SRC_DIR}:$PATH
 
 cwd=$(pwd)
 
-cd ../models/HisToGene
+cd ../models/Hist2ST
 
-CUDA_LAUNCH_BLOCKING=1 python ${cwd}/histogene_pf.py $SLURM_ARRAY_TASK_ID
+CUDA_LAUNCH_BLOCKING=1 python ${cwd}/Hist2ST_pf.py $SLURM_ARRAY_TASK_ID
+
+# NO POINT, BECAUSE MODEL DIFFERENT (NO 1000 GENE model)
+# CUDA_LAUNCH_BLOCKING=1 python ${cwd}/Hist2ST_pf-pretrained.py $SLURM_ARRAY_TASK_ID
+

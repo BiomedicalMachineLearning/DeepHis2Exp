@@ -24,5 +24,6 @@ cd ../models/Hist2ST
 
 CUDA_LAUNCH_BLOCKING=1 python ${cwd}/Hist2ST_pf.py $SLURM_ARRAY_TASK_ID
 
-CUDA_LAUNCH_BLOCKING=1 python ${cwd}/Hist2ST_pf-pretrained.py $SLURM_ARRAY_TASK_ID
+# NO POINT, BECAUSE MODEL DIFFERENT (NO 1000 GENE model)
+# CUDA_LAUNCH_BLOCKING=1 python ${cwd}/Hist2ST_pf-pretrained.py $SLURM_ARRAY_TASK_ID
 

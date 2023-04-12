@@ -167,17 +167,19 @@ test_dataset_1_.X = test_dataset_1_.obsm["predicted_gene"]
 pred_adata = test_dataset_1_
 test_dataset = test_dataset_1
 
-for gene in pred_adata.var_names:
-    cor_val = calculate_correlation_2(pred_adata.to_df().loc[:,gene], test_dataset.to_df().loc[:,gene])
-    df = df.append(pd.Series([gene, cor_val, test_sample, "STimage"], 
-                         index=["Gene", "Pearson correlation", "Slide", "Method"]),
-                  ignore_index=True)
+with open(f"../results/pf_cv/stimage_preds_{test_sample}_pretrained.pkl", 'wb') as f:
+    pickle.dump([pred_adata,test_dataset], f)
 
-df.to_csv("../results/pf_cv/stimage_cor_{_pretrained}.csv".format(test_sample))
+for gene in pred_adata.var_names:
+    cor_val = calculate_correlation_2(pred, test_dataset.to_df().loc[:,gene])
+    cor_pearson = calculate_correlation(pred, test_dataset.to_df().loc[:,gene])
+    df = df.append(pd.Series([gene, cor_val,cor_pearson, test_sample, "STimage"], 
+                         index=["Gene", "Spearman correlation", "Pearson correlation","Slide", "Method"]),
+              ignore_index=True)
+
+df.to_csv("../results/pf_cv/stimage_cor_{}_pretrained.csv".format(test_sample))
 
 with open("../results/pf_cv/stimage_times_pretrained.txt", 'a') as f:
     f.write(f"{test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
-with open(f"../results/pf_cv/stimage_preds_{test_sample}_pretrained.pkl", 'wb') as f:
-    pickle.dump([pred_adata,test_dataset], f)
 

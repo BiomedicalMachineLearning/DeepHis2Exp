@@ -7,8 +7,8 @@
 #SBATCH -e error_%x_%j.txt
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:tesla-smx2:1
-#SBATCH --job-name histogene-pf
-#SBATCH --array=0
+#SBATCH --job-name histogene-pf-cv
+#SBATCH --array=0-9
 #module load cuda/11.0.2.450
 #module load gnu7
 #module load openmpi3
@@ -22,4 +22,4 @@ cwd=$(pwd)
 
 cd ../models/HisToGene
 
-CUDA_LAUNCH_BLOCKING=1 python ${cwd}/histogene_pf.py $SLURM_ARRAY_TASK_ID
+CUDA_LAUNCH_BLOCKING=1 python ${cwd}/histogene_pf_cv.py $SLURM_ARRAY_TASK_ID
