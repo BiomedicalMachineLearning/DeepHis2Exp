@@ -69,6 +69,7 @@ def calculate_correlation_2(attr_1, attr_2):
 
 
 DATA_PATH = Path("../data/pfizer")
+OUT_PATH = Path("../trained_models")
 
 adata_all = read_h5ad(DATA_PATH / "all_adata.h5ad")
 # adata_all.obs['tile_path'] = adata_all.obs['tile_path'].apply(lambda x: x.replace('/clusterdata/uqxtan9/Q1851/Xiao/Working_project/','../data/'))
@@ -85,13 +86,15 @@ samples = adata_all.obs["library_id"].unique().tolist()
 #     gene_list = pickle.load(f)
 
 from read_stimage_genes import read_gene_set_hvg
-gene_list = read_stimage_genes("../data/pfizer")
+gene_list = read_gene_set_hvg("../data/pfizer/", out="list")
 
 df = pd.DataFrame()
 
 i = int(sys.argv[1])
 test_sample = samples[i]
 n_genes = len(gene_list)
+
+print("number of genes: ", n_genes)
 
 adata_all_train_valid = adata_all[adata_all.obs["library_id"].isin(
     adata_all.obs.library_id.cat.remove_categories(test_sample).unique())]
@@ -144,6 +147,10 @@ train_history = model.fit(train_gen_,
                       )
 
 end_train = time.perf_counter()
+
+if save_model_weights:
+    model.save(OUT_PATH / "stimage_model_weights_pretrained.h5")
+
 test_predictions = model.predict(test_gen__1)
 from scipy.stats import nbinom
 y_preds = []
@@ -161,16 +168,16 @@ pred_adata = test_dataset_1_
 test_dataset = test_dataset_1
 
 for gene in pred_adata.var_names:
-    cor_val = calculate_correlation(pred_adata.to_df().loc[:,gene], test_dataset.to_df().loc[:,gene])
+    cor_val = calculate_correlation_2(pred_adata.to_df().loc[:,gene], test_dataset.to_df().loc[:,gene])
     df = df.append(pd.Series([gene, cor_val, test_sample, "STimage"], 
                          index=["Gene", "Pearson correlation", "Slide", "Method"]),
                   ignore_index=True)
 
-df.to_csv("../results/pf_cv/stimage_cor_{}.csv".format(test_sample))
+df.to_csv("../results/pf_cv/stimage_cor_{_pretrained}.csv".format(test_sample))
 
-with open("../results/pf_cv/stimage_times.txt", 'a') as f:
+with open("../results/pf_cv/stimage_times_pretrained.txt", 'a') as f:
     f.write(f"{test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
-with open(f"../results/pf_cv/stimage_preds_{test_sample}.pkl", 'wb') as f:
+with open(f"../results/pf_cv/stimage_preds_{test_sample}_pretrained.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
 

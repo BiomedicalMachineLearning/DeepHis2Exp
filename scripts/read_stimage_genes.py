@@ -17,12 +17,14 @@ def read_gene_set(path):
                                                               ).index[0:250]
     return set(comm_genes)
 
-def read_gene_set_hvg(path):
+def read_gene_set_hvg(path, out="set"):
     DATA_PATH = Path(path)
     adata_all = read_h5ad(DATA_PATH / "train_adata.h5ad")
-    adata_all = read_h5ad(DATA_PATH / "train_adata.h5ad")
     comm_genes = adata_all.var_names[adata_all.var.highly_variable]
-    return set(comm_genes)
+    if out == "set":
+        return set(comm_genes)
+    else:
+        return list(comm_genes)
 
 
 

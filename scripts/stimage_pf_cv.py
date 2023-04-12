@@ -81,15 +81,20 @@ samples = adata_all.obs["library_id"].unique().tolist()
 # gene_list=["COX6C","TTLL12", "PABPC1", "GNAS", "HSP90AB1", 
 #            "TFF3", "ATP1A1", "B2M", "FASN", "SPARC", "CD74", "CD63", "CD24", "CD81"]
 
-gene_list_path = "./gene_list.pkl"
-with open(gene_list_path, 'rb') as f:
-    gene_list = pickle.load(f)
+# gene_list_path = "./gene_list.pkl"
+# with open(gene_list_path, 'rb') as f:
+#     gene_list = pickle.load(f)
+
+from read_stimage_genes import read_gene_set_hvg
+gene_list = read_gene_set_hvg("../data/pfizer/", out="list")
 
 df = pd.DataFrame()
 
 i = int(sys.argv[1])
 test_sample = samples[i]
 n_genes = len(gene_list)
+
+print("number of genes: ", n_genes)
 
 adata_all_train_valid = adata_all[adata_all.obs["library_id"].isin(
     adata_all.obs.library_id.cat.remove_categories(test_sample).unique())]
@@ -163,7 +168,7 @@ pred_adata = test_dataset_1_
 test_dataset = test_dataset_1
 
 for gene in pred_adata.var_names:
-    cor_val = calculate_correlation(pred_adata.to_df().loc[:,gene], test_dataset.to_df().loc[:,gene])
+    cor_val = calculate_correlation_2(pred_adata.to_df().loc[:,gene], test_dataset.to_df().loc[:,gene])
     df = df.append(pd.Series([gene, cor_val, test_sample, "STimage"], 
                          index=["Gene", "Pearson correlation", "Slide", "Method"]),
                   ignore_index=True)

@@ -5,7 +5,7 @@ sys.path.append("./")
 import time
 
 from window_adata import *
-from read_stimage_genes import *
+from read_stimage_genes import read_gene_set_hvg,intersect_section_genes
 
 import torch
 import numpy as np
@@ -68,7 +68,7 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 def calculate_correlation(attr_1, attr_2):
-    r = pearsonr(attr_1, 
+    r = spearmanr(attr_1, 
                        attr_2)[0]
     return r
 
@@ -92,12 +92,15 @@ sizes = [3000 for i in range(len(adata_dict0))]
 
 adata_dict = window_adata(adata_dict0, sizes)
 
-# gene_list = read_gene_set("../../data/pfizer/") # all_adata.h5ad
-gene_list = ['CD4', 'TRAC', 'CXCR4']
-gene_list = set(gene_list)
+gene_list = read_gene_set_hvg("../../data/pfizer/") # train_adata.h5ad
+# gene_list = ['CD4', 'TRAC', 'CXCR4']
+# gene_list = set(gene_list)
 
 gene_list = intersect_section_genes(gene_list, adata_dict)
 n_genes = len(gene_list)
+print("number of genes: ", n_genes)
+with open('../../data/hist2st_hvg1000.pickle', 'wb') as f:
+    pickle.dump(gene_list, f)
 
 
 
@@ -150,7 +153,7 @@ model=Hist2ST(
 
 logger=None
 trainer = pl.Trainer(
-    gpus=[0], max_epochs=1,
+    gpus=[0], max_epochs=100, ########################### Changed from 350
     logger=logger,
 )
 
@@ -162,7 +165,7 @@ import os
 if not os.path.isdir("../../trained_models/"):
     os.mkdir("../../trained_models/")
 
-torch.save(model.state_dict(),f"../../trained_models/{fold}-Hist2ST.ckpt")
+torch.save(model.state_dict(),f"../../trained_models/{test_sample}-Hist2ST.ckpt")
 
 # Some local variable referencing error when model is inside function
 ##########################
@@ -251,7 +254,7 @@ test_dataset = adata_truth.copy()
 
 test_sample = ','.join(list(test_sample))
 
-with open(f"../../results/pf/hist2st_preds_{test_sample}.pkl", 'wb') as f:
+with open(f"../../results/pf_cv/hist2st_preds_{test_sample}.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
 
 for gene in pred_adata.var_names:
@@ -265,9 +268,9 @@ for gene in pred_adata.var_names:
 del model
 torch.cuda.empty_cache()
 
-df.to_csv("../../results/pf/hist2st_cor_{}.csv".format(test_sample))
+df.to_csv("../../results/pf_cv/hist2st_cor_{}.csv".format(test_sample))
 
-with open("../../results/pf/hist2st_times.txt", 'a') as f:
+with open("../../results/pf_cv/hist2st_times.txt", 'a') as f:
     f.write(f"{i} {test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
 
