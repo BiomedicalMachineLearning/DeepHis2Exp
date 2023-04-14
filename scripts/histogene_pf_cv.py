@@ -770,44 +770,45 @@ test_loader = DataLoader(testset, batch_size=1, num_workers=0, shuffle=False)
 
 from tqdm import tqdm
 
-def model_predict(model, test_loader, adata=None, attention=True, device = torch.device('cpu')): 
-    model.eval()
-    model = model.to(device)
-    preds = None
-    adatas,adata_gts = [],[]
-    with torch.no_grad():
-        for patch, position, exp, center in tqdm(test_loader):
-
-            patch, position = patch.to(device), position.to(device)
-            
-            pred = model(patch, position)
-
-
-            if preds is None:
-                preds = pred.squeeze()
-                ct = center
-                gt = exp
-            else:
-                preds = torch.cat((preds,pred),dim=0)
-                ct = torch.cat((ct,center),dim=0)
-                gt = torch.cat((gt,exp),dim=0)
-                
-            preds = preds.cpu().squeeze().numpy()
-            ct = ct.cpu().squeeze().numpy()
-            gt = gt.cpu().squeeze().numpy()
-            adata = ann.AnnData(preds)
-            adata.obsm['spatial'] = ct
-
-            adata_gt = ann.AnnData(gt)
-            adata_gt.obsm['spatial'] = ct
-
-            adatas.append(adata)
-            adata_gts.append(adata_gt)
-
-    adata = ad.concat(adatas)
-    adata_gt = ad.concat(adata_gts)
-
-    return adata, adata_gt
+########### Looks like the original should already work
+# def model_predict(model, test_loader, adata=None, attention=True, device = torch.device('cpu')): 
+#     model.eval()
+#     model = model.to(device)
+#     preds = None
+#     adatas,adata_gts = [],[]
+#     with torch.no_grad():
+#         for patch, position, exp, center in tqdm(test_loader):
+# 
+#             patch, position = patch.to(device), position.to(device)
+#             
+#             pred = model(patch, position)
+# 
+# 
+#             if preds is None:
+#                 preds = pred.squeeze()
+#                 ct = center
+#                 gt = exp
+#             else:
+#                 preds = torch.cat((preds,pred),dim=0)
+#                 ct = torch.cat((ct,center),dim=0)
+#                 gt = torch.cat((gt,exp),dim=0)
+#                 
+#             preds = preds.cpu().squeeze().numpy()
+#             ct = ct.cpu().squeeze().numpy()
+#             gt = gt.cpu().squeeze().numpy()
+#             adata = ann.AnnData(preds)
+#             adata.obsm['spatial'] = ct
+# 
+#             adata_gt = ann.AnnData(gt)
+#             adata_gt.obsm['spatial'] = ct
+# 
+#             adatas.append(adata)
+#             adata_gts.append(adata_gt)
+# 
+#     adata = ad.concat(adatas)
+#     adata_gt = ad.concat(adata_gts)
+# 
+#     return adata, adata_gt
 
 
 adata_pred, adata_truth = model_predict(model, test_loader, attention=False, device = device)

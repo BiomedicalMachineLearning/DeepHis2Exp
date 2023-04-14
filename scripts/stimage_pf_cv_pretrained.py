@@ -148,8 +148,9 @@ train_history = model.fit(train_gen_,
 
 end_train = time.perf_counter()
 
+save_model_weights = True
 if save_model_weights:
-    model.save(OUT_PATH / "stimage_model_weights_pretrained.h5")
+    model.save(OUT_PATH / f"{test_sample}_stimage_model_weights_pretrained.h5")
 
 test_predictions = model.predict(test_gen__1)
 from scipy.stats import nbinom
