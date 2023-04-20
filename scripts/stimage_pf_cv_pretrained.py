@@ -115,14 +115,14 @@ train_gen = tf.data.Dataset.from_generator(
         output_types=(tf.float32, tuple([tf.float32]*n_genes)), 
         output_shapes=([299,299,3], tuple([1]*n_genes))
 )
-train_gen_ = train_gen.shuffle(buffer_size=500).batch(32).repeat(1).cache().prefetch(tf.data.experimental.AUTOTUNE)
+train_gen_ = train_gen.shuffle(buffer_size=500).batch(128).repeat(3).cache().prefetch(tf.data.experimental.AUTOTUNE)
 valid_gen = tf.data.Dataset.from_generator(
         lambda:DataGenerator(adata=valid_dataset, 
                       genes=gene_list), 
         output_types=(tf.float32, tuple([tf.float32]*n_genes)), 
         output_shapes=([299,299,3], tuple([1]*n_genes))
 )
-valid_gen_ = valid_gen.shuffle(buffer_size=500).batch(32).repeat(1).cache().prefetch(tf.data.experimental.AUTOTUNE)
+valid_gen_ = valid_gen.shuffle(buffer_size=500).batch(128).repeat(3).cache().prefetch(tf.data.experimental.AUTOTUNE)
 test_gen_1 = tf.data.Dataset.from_generator(
         lambda:DataGenerator(adata=test_dataset_1, 
                       genes=gene_list), 
@@ -148,7 +148,9 @@ train_history = model.fit(train_gen_,
 
 end_train = time.perf_counter()
 
-save_model_weights = True
+print("Finished training")
+
+save_model_weights = False
 if save_model_weights:
     model.save(OUT_PATH / f"{test_sample}_stimage_model_weights_pretrained.h5")
 

@@ -770,45 +770,40 @@ test_loader = DataLoader(testset, batch_size=1, num_workers=0, shuffle=False)
 
 from tqdm import tqdm
 
-########### Looks like the original should already work
-# def model_predict(model, test_loader, adata=None, attention=True, device = torch.device('cpu')): 
-#     model.eval()
-#     model = model.to(device)
-#     preds = None
-#     adatas,adata_gts = [],[]
-#     with torch.no_grad():
-#         for patch, position, exp, center in tqdm(test_loader):
-# 
-#             patch, position = patch.to(device), position.to(device)
-#             
-#             pred = model(patch, position)
-# 
-# 
-#             if preds is None:
-#                 preds = pred.squeeze()
-#                 ct = center
-#                 gt = exp
-#             else:
-#                 preds = torch.cat((preds,pred),dim=0)
-#                 ct = torch.cat((ct,center),dim=0)
-#                 gt = torch.cat((gt,exp),dim=0)
-#                 
-#             preds = preds.cpu().squeeze().numpy()
-#             ct = ct.cpu().squeeze().numpy()
-#             gt = gt.cpu().squeeze().numpy()
-#             adata = ann.AnnData(preds)
-#             adata.obsm['spatial'] = ct
-# 
-#             adata_gt = ann.AnnData(gt)
-#             adata_gt.obsm['spatial'] = ct
-# 
-#             adatas.append(adata)
-#             adata_gts.append(adata_gt)
-# 
-#     adata = ad.concat(adatas)
-#     adata_gt = ad.concat(adata_gts)
-# 
-#     return adata, adata_gt
+def model_predict(model, test_loader, adata=None, attention=True, device = torch.device('cpu')): 
+    model.eval()
+    model = model.to(device)
+    preds = None
+    with torch.no_grad():
+        for patch, position, exp, center in tqdm(test_loader):
+
+            patch, position = patch.to(device), position.to(device)
+            
+            pred = model(patch, position).squeeze()
+            center = center.squeeze()
+            exp = exp.squeeze()
+
+
+            if preds is None:
+                preds = pred.squeeze()
+                ct = center.squeeze()
+                gt = exp.squeeze()
+            else:
+                preds = torch.cat((preds,pred),dim=0)
+                ct = torch.cat((ct,center),dim=0)
+                gt = torch.cat((gt,exp),dim=0)
+                
+    preds = preds.cpu().squeeze().numpy()
+    ct = ct.cpu().squeeze().numpy()
+    gt = gt.cpu().squeeze().numpy()
+    adata = ann.AnnData(preds)
+    adata.obsm['spatial'] = ct
+
+    adata_gt = ann.AnnData(gt)
+    adata_gt.obsm['spatial'] = ct
+
+    return adata, adata_gt
+
 
 
 adata_pred, adata_truth = model_predict(model, test_loader, attention=False, device = device)
@@ -821,7 +816,7 @@ test_dataset = adata_truth.copy()
 
 # test_sample = ','.join(list(test_sample))
 
-with open(f"../../results/pf_cv/histogene_preds_{test_sample_orig}_{i}.pkl", 'wb') as f:
+with open(f"../../results/pf_cv/histogene_preds_{test_sample_orig}.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
 
 for gene in pred_adata.var_names:
@@ -836,10 +831,10 @@ for gene in pred_adata.var_names:
 del model
 torch.cuda.empty_cache()
 
-df.to_csv("../../results/pf_cv/histogene_cor_{}_{i}.csv".format(test_sample_orig, i))
+df.to_csv("../../results/pf_cv/histogene_cor_{}.csv".format(test_sample_orig))
 
 with open("../../results/pf_cv/histogene_times.txt", 'a') as f:
-    f.write(f"{i} {test_sample_orig} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
+    f.write(f"{test_sample_orig} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
 
 

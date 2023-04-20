@@ -161,7 +161,7 @@ model=Hist2ST(
 
 logger=None
 trainer = pl.Trainer(
-    gpus=[0], max_epochs=100, ########################### Changed from 350
+    gpus=[0], max_epochs=350, ########################### Changed from 350
     logger=logger,
 )
 

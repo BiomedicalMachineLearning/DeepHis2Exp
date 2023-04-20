@@ -6,7 +6,7 @@
 #SBATCH -o out_%x_%j.txt
 #SBATCH -e error_%x_%j.txt
 #SBATCH --partition=gpu
-#SBATCH --gres=gpu:tesla:1
+#SBATCH --gres=gpu:tesla-smx2:1
 #SBATCH --job-name stimage-pf-cv
 #SBATCH --array=0-9
 

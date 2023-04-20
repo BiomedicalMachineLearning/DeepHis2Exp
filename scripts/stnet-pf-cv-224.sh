@@ -2,7 +2,7 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 24
-#SBATCH --mem=100000
+#SBATCH --mem=75000
 #SBATCH -o out_%x_%j.txt
 #SBATCH -e error_%x_%j.txt
 #SBATCH --partition=gpu
