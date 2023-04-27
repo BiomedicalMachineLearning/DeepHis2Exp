@@ -68,7 +68,7 @@ def calculate_correlation_2(attr_1, attr_2):
     return r
 
 
-DATA_PATH = Path("../data/pfizer")
+DATA_PATH = Path("../data/pfizer2")
 OUT_PATH = Path("../trained_models")
 
 adata_all = read_h5ad(DATA_PATH / "all_adata.h5ad")
@@ -86,7 +86,7 @@ samples = adata_all.obs["library_id"].unique().tolist()
 #     gene_list = pickle.load(f)
 
 from read_stimage_genes import read_gene_set_hvg
-gene_list = read_gene_set_hvg("../data/pfizer/", out="list")
+gene_list = read_gene_set_hvg("../data/pfizer2/", out="list")
 
 df = pd.DataFrame()
 
@@ -170,7 +170,7 @@ test_dataset_1_.X = test_dataset_1_.obsm["predicted_gene"]
 pred_adata = test_dataset_1_
 test_dataset = test_dataset_1
 
-with open(f"../results/pf_cv/stimage_preds_{test_sample}.pkl", 'wb') as f:
+with open(f"../results/pf_cv2/stimage_preds_{test_sample}.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
 
 for gene in pred_adata.var_names:
@@ -182,9 +182,9 @@ for gene in pred_adata.var_names:
                          index=["Gene", "Spearman correlation", "Pearson correlation","Slide", "Method"]),
               ignore_index=True)
 
-df.to_csv("../results/pf_cv/stimage_cor_{}.csv".format(test_sample))
+df.to_csv("../results/pf_cv2/stimage_cor_{}.csv".format(test_sample))
 
-with open("../results/pf_cv/stimage_times.txt", 'a') as f:
+with open("../results/pf_cv2/stimage_times.txt", 'a') as f:
     f.write(f"{test_sample} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
 

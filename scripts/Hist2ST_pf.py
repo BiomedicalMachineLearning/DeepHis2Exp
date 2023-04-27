@@ -79,7 +79,7 @@ def calculate_correlation_2(attr_1, attr_2):
     return r
 
 
-data_dir1 = "../../data/pfizer/"
+data_dir1 = "../../data/pfizer2/"
 
 samps1 = ["VLP79_D","VLP82_A","VLP79_A","VLP80_D","VLP83_A","VLP80_A","VLP81_A","VLP82_D","VLP83_D","VLP78_A"]
 
@@ -98,15 +98,15 @@ sizes = [3000 for i in range(len(adata_dict0))]
 
 adata_dict = window_adata(adata_dict0, sizes)
 
-gene_list = read_gene_set_hvg("../../data/pfizer/") # train_adata.h5ad
+gene_list = read_gene_set_hvg("../../data/pfizer2/") # train_adata.h5ad
 # gene_list = ['CD4', 'TRAC', 'CXCR4']
 # gene_list = set(gene_list)
 
 gene_list = intersect_section_genes(gene_list, adata_dict)
 n_genes = len(gene_list)
 print("number of genes: ", n_genes)
-with open('../../data/hist2st_hvg1000.pickle', 'wb') as f:
-    pickle.dump(gene_list, f)
+# with open('../../data/hist2st_hvg1000.pickle', 'wb') as f:
+#     pickle.dump(gene_list, f)
 
 
 
@@ -262,7 +262,7 @@ test_dataset = adata_truth.copy()
 
 # test_sample = ','.join(list(test_sample))
 
-with open(f"../../results/pf_cv/hist2st_preds_{test_sample_orig}.pkl", 'wb') as f:
+with open(f"../../results/pf_cv2/hist2st_preds_{test_sample_orig}.pkl", 'wb') as f:
     pickle.dump([pred_adata,test_dataset], f)
 
 for gene in pred_adata.var_names:
@@ -277,9 +277,9 @@ for gene in pred_adata.var_names:
 del model
 torch.cuda.empty_cache()
 
-df.to_csv("../../results/pf_cv/hist2st_cor_{}.csv".format(test_sample_orig))
+df.to_csv("../../results/pf_cv2/hist2st_cor_{}.csv".format(test_sample_orig))
 
-with open("../../results/pf_cv/hist2st_times.txt", 'a') as f:
+with open("../../results/pf_cv2/hist2st_times.txt", 'a') as f:
     f.write(f"{i} {test_sample_orig} {end_train - start_train} - {time.strftime('%H:%M:%S', time.localtime())}")
 
 

@@ -7,7 +7,7 @@
 #SBATCH -e error_%x_%j.txt
 #SBATCH --partition=gpu
 #SBATCH --job-name deepspace
-#SBATCH --gres=gpu:tesla-smx2:1
+#SBATCH --gres=gpu:1
 #SBATCH --array=0-9
 
 cd ~/scratch/benchmmarking/DeepHis2Exp/
@@ -25,5 +25,5 @@ export SINGULARITY_TMPDIR=$SINGULARITY_CACHEDIR/tmp
 export SINGULARITY_LOCALCACHEDIR=$SINGULARITY_CACHEDIR/localcache
 export SINGULARITY_PULLFOLDER=$SINGULARITY_CACHEDIR/pull
 
-chmod +x train-pf-cv.sh
-singularity exec --nv deepspace_v1.0.sif bash train-pf-cv.sh $SLURM_ARRAY_TASK_ID
+chmod +x pp-pf.sh
+singularity exec --nv deepspace_v1.0.sif bash pp-pf.sh $SLURM_ARRAY_TASK_ID

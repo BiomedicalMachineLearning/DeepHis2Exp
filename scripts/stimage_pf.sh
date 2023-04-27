@@ -21,9 +21,9 @@ PATH=../envs/stimage_test/bin:$PATH
 
 cd ../models/STimage/stimage/
 
-# time python 01_Preprocessing.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
+time python 01_Preprocessing.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer2/stimage-config.ini
 
-time python 02_Training_DUMMY.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
+time python 02_Training_DUMMY.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer2/stimage-config.ini
 # time python 02_Training.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
 
 # time python 03_Prediction.py --config /scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/data/pfizer/stimage-config.ini
