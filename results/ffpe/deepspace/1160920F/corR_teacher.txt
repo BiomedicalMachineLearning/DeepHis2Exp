@@ -1,0 +1,13 @@
+geneSymbols	corR	corS
+FASN		
+TTLL12		
+TFF3		
+HSP90AB1		
+COX6C		
+SPARC		
+CD24		
+CD81		
+CD63		
+ATP1A1		
+CD74		
+B2M		

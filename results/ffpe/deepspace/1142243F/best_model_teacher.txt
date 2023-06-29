@@ -1,0 +1,1 @@
+/scratch/imb/uqjxie6/benchmmarking/DeepHis2Exp/results/ffpe/deepspace/1142243F/model_teacher/model_0.pth

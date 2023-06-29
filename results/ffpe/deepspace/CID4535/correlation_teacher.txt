@@ -1,0 +1,12 @@
+TTLL12	nan
+B2M	nan
+COX6C	nan
+CD63	nan
+HSP90AB1	nan
+ATP1A1	nan
+CD74	nan
+FASN	nan
+CD24	nan
+SPARC	nan
+CD81	nan
+TFF3	nan
