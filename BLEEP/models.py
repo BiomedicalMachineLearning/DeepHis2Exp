@@ -110,8 +110,8 @@ class CLIPModel_VICReg(nn.Module):
         Invariance = F.mse_loss(image_embeddings, spot_embeddings)
 
         # Variance
-        x = img_h - img_h.mean(dim=0)
-        y = exp_h - exp_h.mean(dim=0)
+        x = image_embeddings - image_embeddings.mean(dim=0)
+        y = spot_embeddings - spot_embeddings.mean(dim=0)
 
         std_x = torch.sqrt(x.var(dim=0) + 0.0001)
         std_y = torch.sqrt(y.var(dim=0) + 0.0001)
