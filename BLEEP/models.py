@@ -41,7 +41,102 @@ class CLIPModel(nn.Module):
         images_loss = cross_entropy(logits.T, targets.T, reduction='none')
         loss =  (images_loss + spots_loss) / 2.0 # shape: (batch_size)
         return loss.mean()
-    
+
+class CLIPModel_cosine_sim(nn.Module):
+    def __init__(
+        self,
+        temperature=CFG.temperature,
+        image_embedding=CFG.image_embedding,
+        spot_embedding=CFG.spot_embedding,
+    ):
+        super().__init__()
+        self.image_encoder = ImageEncoder()
+#         self.spot_encoder = SpotEncoder()
+        self.image_projection = ProjectionHead(embedding_dim=image_embedding) #aka the input dim, 2048 for resnet50
+        self.spot_projection = ProjectionHead(embedding_dim=spot_embedding) #3467 shared hvgs
+        self.temperature = temperature
+
+    def forward(self, batch):
+        # Getting Image and spot Features
+        image_features = self.image_encoder(batch["image"])
+        spot_features = batch["reduced_expression"]
+#         spot_features = self.spot_encoder(batch["reduced_expression"])
+        
+        # Getting Image and Spot Embeddings (with same dimension) 
+        image_embeddings = self.image_projection(image_features)
+        spot_embeddings = self.spot_projection(spot_features)
+
+        # Calculating the Loss
+        Cos_sim = nn.CosineSimilarity(eps=1e-6)
+        logits = Cos_sim(spot_embeddings, image_embeddings)/ self.temperature
+        images_similarity = Cos_sim(image_embeddings, image_embeddings)
+        spots_similarity = Cos_sim(spot_embeddings, spot_embeddings)
+        targets = F.softmax(
+            (images_similarity + spots_similarity) / 2 * self.temperature, dim=-1
+        )
+        spots_loss = cross_entropy(logits, targets, reduction='none')
+        images_loss = cross_entropy(logits.T, targets.T, reduction='none')
+        loss =  (images_loss + spots_loss) / 2.0 # shape: (batch_size)
+        print(f"spots_loss:{spots_loss}; images_loss:{images_loss}; loss:{loss}")
+        return loss.mean()
+
+class CLIPModel_VICReg(nn.Module):
+    def __init__(
+        self,
+        temperature=CFG.temperature,
+        image_embedding=CFG.image_embedding,
+        spot_embedding=CFG.spot_embedding,
+    ):
+        super().__init__()
+        self.image_encoder = ImageEncoder()
+#         self.spot_encoder = SpotEncoder()
+        self.image_projection = ProjectionHead(embedding_dim=image_embedding) #aka the input dim, 2048 for resnet50
+        self.spot_projection = ProjectionHead(embedding_dim=spot_embedding) #3467 shared hvgs
+        self.temperature = temperature
+
+    def forward(self, batch):
+        # Getting Image and spot Features
+        image_features = self.image_encoder(batch["image"])
+        spot_features = batch["reduced_expression"]
+#         spot_features = self.spot_encoder(batch["reduced_expression"])
+        
+        # Getting Image and Spot Embeddings (with same dimension) 
+        image_embeddings = self.image_projection(image_features)
+        spot_embeddings = self.spot_projection(spot_features)
+
+        # Calculating the Loss
+
+        # Invariance
+        Invariance = F.mse_loss(image_embeddings, spot_embeddings)
+
+        # Variance
+        x = img_h - img_h.mean(dim=0)
+        y = exp_h - exp_h.mean(dim=0)
+
+        std_x = torch.sqrt(x.var(dim=0) + 0.0001)
+        std_y = torch.sqrt(y.var(dim=0) + 0.0001)
+        Variance = torch.mean(F.relu(1 - std_x)) / 2 + torch.mean(F.relu(1 - std_y)) / 2
+
+        # Covariance
+        def off_diagonal(x):
+            n, m = x.shape
+            assert n == m
+            x = x.flatten()[:-1]
+            x = x.view(n - 1, n + 1)
+            x = x[:, 1:]
+            x = x.flatten()
+            return x
+
+        cov_x = (x.T @ x)
+        cov_y = (y.T @ y)
+        Covariance = off_diagonal(cov_x).pow_(2).sum().div(dim) + off_diagonal(cov_y).pow_(2).sum().div(dim)
+
+        # Total loss
+        loss = 25*Invariance + 25*Variance + 0.0001*Covariance
+        print(f"Invariance:{Invariance}; Variance:{Variance}; Covariance:{Covariance}; Loss:{loss}")
+        return loss.mean()
+
+        
 class CLIPModel_ViT(nn.Module):
     def __init__(
         self,
