@@ -261,6 +261,14 @@ def main():
     if args.model == "clip":
         model = CLIPModel_CLIP(spot_embedding=args.dim).cuda(current_device)
         print("Image encoder is CLIP")
+        """New things begin"""
+    elif args.model == "clip_vicreg":
+        model = CLIPModel_VICReg(spot_embedding=args.dim).cuda(current_device)
+        print("Image encoder is clip_vicreg")
+    elif args.model == "clip_cosine":
+        model = CLIPModel_cosine_sim(spot_embedding=args.dim).cuda(current_device)
+        print("Image encoder is clip_cosine")
+        """New things end"""
     elif args.model == "vit":
         model = CLIPModel_ViT(spot_embedding=args.dim).cuda(current_device)
         print("Image encoder is ViT")
