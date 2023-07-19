@@ -34,8 +34,9 @@ echo "r$SLURM_NODEID Launching python script"
 # srun python main.py --init_method tcp://$MASTER_ADDR:3456 --exp_name clip_a1 --world_size $SLURM_NTASKS  --batch_size 256 --max_epochs 300 --num_workers 4
 # srun python $1 --init_method tcp://$MASTER_ADDR:3456 --exp_name $2 --world_size $SLURM_NTASKS  --batch_size $3 --max_epochs $4 --num_workers $5
 
-python BLEEP_main.py --init_method tcp://$MASTER_ADDR:3456 --exp_name clip_visium_bc --batch_size 256 --max_epochs 150 --num_workers 4 --fold $SLURM_ARRAY_TASK_ID --dim 5689 --data_name visium_bc
+python BLEEP_main.py --init_method tcp://$MASTER_ADDR:3456 --exp_name clip_visium_bc --batch_size 256 --max_epochs 150 --num_workers 4 --fold $SLURM_ARRAY_TASK_ID --dim 5689 --data_name visium_bc --model CLIPModel_cosine_sim
 
+#--model CLIPModel_cosine_sim, CLIPModel_VICReg
 #sbatch train_ddp_slice1.sh main.py clip_a1 256 300 4
 
 
