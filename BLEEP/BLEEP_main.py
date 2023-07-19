@@ -11,7 +11,7 @@ import torch.utils.data.distributed
 import config as CFG
 from dataset import CLIPDataset
 from dataset_her2 import HERDataset
-from models import CLIPModel, CLIPModel_ViT, CLIPModel_ViT_L, CLIPModel_CLIP, CLIPModel_resnet101, CLIPModel_resnet152
+from models import *
 from utils import AvgMeter
 from torch.utils.data import DataLoader
 
