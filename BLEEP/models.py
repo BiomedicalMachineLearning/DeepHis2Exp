@@ -85,6 +85,49 @@ class CLIPModel_cosine_sim(nn.Module):
         elif reduction == "mean":
             return loss.mean()
 
+class CLIPModel_attention(nn.Module):
+    def __init__(
+        self,
+        temperature = CFG.temperature,
+        image_embedding=CFG.image_embedding,
+        spot_embedding=CFG.spot_embedding,
+    ):
+        super().__init__()
+        self.image_encoder = ImageEncoder()
+        self.image_projection = ProjectionHead(embedding_dim=image_embedding) #aka the input dim, 2048 for resnet50
+        self.spot_projection = ProjectionHead(embedding_dim=spot_embedding) #3467 shared hvgs
+        self.temperature = temperature
+
+    def forward(self, batch):
+        # Getting Image and spot Features
+        image_features = self.image_encoder(batch["image"])
+        spot_features = batch["reduced_expression"]
+        
+        # Getting Image and Spot Embeddings (with same dimension) 
+        image_embeddings = self.image_projection(image_features)
+        spot_embeddings = self.spot_projection(spot_features)
+
+        # Calculating the Loss
+        Cos_sim = nn.CosineSimilarity(eps=1e-6)
+        logits = Cos_sim(spot_embeddings, image_embeddings)/ self.temperature
+        images_similarity = Cos_sim(image_embeddings, image_embeddings)
+        spots_similarity = Cos_sim(spot_embeddings, spot_embeddings)
+        targets = F.softmax(
+            (images_similarity + spots_similarity) / 2 * self.temperature, dim=-1
+        )
+        spots_loss = self.cross_entropy(logits, targets, reduction='none')
+        images_loss = self.cross_entropy(logits.T, targets.T, reduction='none')
+        loss =  (images_loss + spots_loss) / 2.0 # shape: (batch_size)
+        return loss.mean()
+    
+    def cross_entropy(self, preds, targets, reduction='none'):
+        log_softmax = nn.LogSoftmax(dim=-1)
+        loss = (-targets * log_softmax(preds)).sum(-1)
+        if reduction == "none":
+            return loss
+        elif reduction == "mean":
+            return loss.mean()
+
 class CLIPModel_VICReg(nn.Module):
     def __init__(
         self,

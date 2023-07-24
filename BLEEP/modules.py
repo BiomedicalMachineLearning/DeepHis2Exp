@@ -22,6 +22,25 @@ class ImageEncoder(nn.Module):
     def forward(self, x):
         return self.model(x)
     
+
+class ImageEncoder_VICReg(nn.Module):
+    """
+    Encode images to a fixed size vector
+    """
+
+    def __init__(
+        self, model_name='vicreg', pretrained=CFG.pretrained, trainable=CFG.trainable
+    ):
+        super().__init__()
+        self.model = torch.hub.load('facebookresearch/vicreg:main', 'resnet50')
+        
+        for p in self.model.parameters():
+            p.requires_grad = trainable
+
+    def forward(self, x):
+        return self.model(x)
+
+
 class ImageEncoder_resnet50(nn.Module):
     """
     Encode images to a fixed size vector
