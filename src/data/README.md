@@ -1,4 +1,3 @@
-This folder should contain the data
 # Datasets
 * Human HER2-positive breast tumor ST data https://github.com/almaan/her2st/.
     * git clone https://github.com/almaan/her2st.git
