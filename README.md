@@ -1,19 +1,17 @@
 # DeepHis2Exp
 
-Rethinking the generalization of deep learning models for predicting spatial gene expression profiles using histology images.
+Generalization of deep learning models for predicting spatial gene expression profiles using histology images: A breast cancer case study.
 
 ![Benchmarking Overview](https://github.com/BiomedicalMachineLearning/DeepHis2Exp/blob/main/Figures/Cover.png)
 
-# Summary of Data Preprocessing Methods
-
-| **Model** | **Tile Size (pixels)** | **Data Augmentation**                                        | **Gene Expression Pre-Processing** |
-| --------- | ---------------------- | ------------------------------------------------------------ | ---------------------------------- |
-| ST-Net    | 224 x 224              | Random Rotation & Flipping                                   | Log Transformation                 |
-| HisToGene | 112 x 112              | Random Rotation & Flipping + ColorJitter                     | Normalization + Log Transformation |
-| Hist2ST   | 112 x 112              | Random Rotation & Flipping + ColorJitter (Self-distillation strategy) | Normalization + Log Transformation |
-| STimage   | 299 x 299              | Color Normalization (Vahadane) + Random one of flipping, cropping, noise addition, blurring, distortion, contrast adjustment, colour-shifting + Remove tiles with low tissue coverage (< 70%) | Log Transformation                 |
-| DeepSpaCE | 224 x 224              | Remove tiles with high RGB values                            | SCTransform + MinMax Scaling       |
-| BLEEP     | 224 x 224              | Random Rotation & Flip                                       | Normalization + Log Transformation |
+# Table of content
+The main scripts are contained in *src* folder.
+* Assessment of model performance on Her2+ and Visium datasets.
+* Assessment of model generalisation capability on out-of-domain dataset.
+* Assessment of Hist2ST variants performance on Her2+ and Visium dataset.
+* Quantify the effect of color transformation on Hist2ST model performance.
+* Comparison of different data augmentaion methods from different models based on Hist2ST model.
+* Comparison of different gene expression preprocessing methods based on Hist2ST model.
 
 # Summary of Image Encoders and Loss Functions from 6 Models
 
@@ -25,5 +23,16 @@ Rethinking the generalization of deep learning models for predicting spatial gen
 | STimage   | Resnet50 (Pre-trained)    | Negative log likelihood                                      |
 | DeepSpaCE | VGG16 (Pre-trained)       | Mean Squared Error                                           |
 | BLEEP     | Resnet50 (Pre-trained)    | Cross Entropy                                                |
+
+# Benchmarked papers
+
+| No. | Algorithm | Year | Datasets | Compared |
+| --- | --- | --- | --- | --- |
+| 1 | [ST-Net](https://www.nature.com/articles/s41551-020-0578-x) [[Code]](https://github.com/bryanhe/ST-Net) | 2020 | BC0 |  |
+| 2 | [HisToGene](https://www.biorxiv.org/content/10.1101/2021.11.28.470212v1.abstract) [[Code]](https://github.com/maxpmx/HisToGene) | 2021 | (1) BC1 (2) Human cutaneous squamous cell carcinoma 10x Visium data (GSE144240) | ST-Net |
+| 3 | [Hist2ST](https://academic.oup.com/bib/article-abstract/23/5/bbac297/6645485) [[Code]](https://github.com/biomed-AI/Hist2ST) | 2022 | (1) BC1 (2) Human cutaneous squamous cell carcinoma 10x Visium data (GSE144240) | ST-Net, HisToGene |
+| 4 | [DeepSpaCE](https://www.nature.com/articles/s41598-022-07685-4) [[Code]](https://github.com/tmonjo/DeepSpaCE/tree/main) | 2022 | Six human breast cancer tissue sections (DNA Data Bank of Japan: accession number JGAS000202 and JGAS000290) | ST-Net |
+| 5 | [BLEEP](https://arxiv.org/pdf/2306.01859.pdf) [[Code]](https://github.com/bowang-lab/BLEEP/tree/main) | 2023 | Human liver tissue dataset ([Link](https://figshare.com/projects/Human_Liver_SC_vs_SN_paper/98981)) | ST-Net, HisToGene |
+| 6 | [STimage](https://www.biorxiv.org/content/10.1101/2023.05.14.540710v1) [[Code]](https://github.com/BiomedicalMachineLearning/STimage) | 2023 | (1) BC1 (2) BC2 + BC3 | ST-Net, HisToGene, Hist2ST |
 
 
