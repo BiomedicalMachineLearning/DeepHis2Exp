@@ -7,18 +7,14 @@
 * BLEEP
 
 ## Summary of data preprocessing methods
-| Model       | Tile size (pixels) | Data augmentation                                       | Gene expression Pre-processing                   |
-|-------------|---------------------|--------------------------------------------------------|---------------------------------------------------|
-| ST-Net      | 224 x 224           | Random Rotation & Flipping                            | Log Transformation                               |
-| HisToGene   | 112 x 112           | Random Rotation & Flipping + ColorJitter              | Normalization + Log Transformation                |
-| Hist2ST     | 112 x 112           | Random Rotation & Flipping + ColorJitter             | Normalization + Log Transformation                |
-|             |                     | (Self-distillation strategy)                           |                                                   |
-| STimage     | 299 x 299           | Color Normalization (Vahadane) + Random one of       | Log Transformation                               |
-|             |                     | flipping, cropping, noise addition, blurring,        | Remove tiles with low tissue coverage (< 70%)      |
-|             |                     | distortion, contrast adjustment, colour-shifting +   |                                                   |
-|             |                     | Remove tiles with low tissue coverage (< 70%)        |                                                   |
-| DeepSpaCE   | 224 x 224           | Remove tiles with high RGB values                    | SCTransform + MinMax Scaling                      |
-| BLEEP       | 224 x 224           | Random rotation & flip                                 | Normalization + Log Transformation                |
+| Model       | Tile size (pixels) | Data augmentation                                     | Gene expression Pre-processing                   |
+|-------------|---------------------|------------------------------------------------------|--------------------------------------------------|
+| ST-Net      | 224 x 224           | Random Rotation & Flipping                           | Log Transformation                               |
+| HisToGene   | 112 x 112           | Random Rotation & Flipping + ColorJitter             | Normalization + Log Transformation               |
+| Hist2ST     | 112 x 112           | Random Rotation & Flipping + ColorJitter, (Self-distillation strategy)| Normalization + Log Transformation|
+| STimage     | 299 x 299           | Color Normalization (Vahadane) + Random one of flipping, cropping, noise addition, blurring, distortion, contrast adjustment, colour-shifting + remove tiles with low tissue coverage (< 70%) | Log Transformation |
+| DeepSpaCE   | 224 x 224           | Remove tiles with high RGB values                    | SCTransform + MinMax Scaling                     |
+| BLEEP       | 224 x 224           | Random rotation & flip                                 | Normalization + Log Transformation             |
 
 ## Related codes
 The related codes were highlight here.
