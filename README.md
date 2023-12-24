@@ -183,6 +183,5 @@ The benchmarking work is based on the original paper and codes.
 | 4 | [DeepSpaCE](https://www.nature.com/articles/s41598-022-07685-4) [[Code]](https://github.com/tmonjo/DeepSpaCE/tree/main) | 2022 | Six human breast cancer tissue sections (DNA Data Bank of Japan: accession number JGAS000202 and JGAS000290) | ST-Net |
 | 5 | [BLEEP](https://arxiv.org/pdf/2306.01859.pdf) [[Code]](https://github.com/bowang-lab/BLEEP/tree/main) | 2023 | Human liver tissue dataset ([Link](https://figshare.com/projects/Human_Liver_SC_vs_SN_paper/98981)) | ST-Net, HisToGene |
 | 6 | [STimage](https://www.biorxiv.org/content/10.1101/2023.05.14.540710v1) [[Code]](https://github.com/BiomedicalMachineLearning/STimage) | 2023 | (1) BC1 (2) BC2 + BC3 | ST-Net, HisToGene, Hist2ST |
-| 7 | [DeepPT](https://www.biorxiv.org/content/10.1101/2022.06.07.495219v3.full) [[Code]]
-(https://github.com/PangeaResearch/enlight-deeppt-data.) | 2023 | None | None |
+| 7 | [DeepPT](https://www.biorxiv.org/content/10.1101/2022.06.07.495219v3.full) [[Code]](https://github.com/PangeaResearch/enlight-deeppt-data.) | 2023 | None | None |
 
