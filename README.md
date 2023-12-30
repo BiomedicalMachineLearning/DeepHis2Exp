@@ -114,7 +114,7 @@ python ./Implementation/GraphConstruction/BuildGraph_dgl.py \
         --hpc wiener \
 ```
 
-Note: You only need to modify `pag` and `gag`. If `pag` is True, the weighted graph is constructed by pathology annoatations. If `gag` is True, the weighted graph is constructed by gene expression similarity. If both of them were True, the weighted graph is the summation of two graph.
+Note: You only need to modify `pag` and `gag`. If `pag` is True, the weighted graph is constructed by pathology annotations. If `gag` is True, the weighted graph is constructed by gene expression similarity. If both of them were True, the weighted graph is the summation of two graphs.
 
 ### Benchmarking message passing methods based on Hist2ST
 
@@ -133,7 +133,7 @@ python ./Implementation/GraphConstruction/BuildGraph_dgl.py \
         --hpc wiener \
 ```
 
-Note: You only need to modify `pag` and `gag`. If `pag` is True, the weighted graph is constructed by pathology annoatations. If `gag` is True, the weighted graph is constructed by gene expression similarity. If both of them were True, the weighted graph is the summation of two graph.
+Note: You only need to modify `pag` and `gag`. If `pag` is True, the weighted graph is constructed by pathology annotations. If `gag` is True, the weighted graph is constructed by gene expression similarity. If both of them were True, the weighted graph is the summation of two graphs.
 
 
 
@@ -165,12 +165,24 @@ python ./Implementation/Baseline.py \
         --hpc wiener \
 ```
 
-Note: You only need to change `exp_norm`, the options are `raw`, `log1p`, `lognorm`, `norm`.
+Note: You only need to change `exp_norm`, the options are `raw`, `log1p`, `lognorm`, and `norm`.
 
 ### Downstream task performance (spatial region detection)
 
-We evaluated the performance of predicted gene expression on clustering task. We regard the pathology annotations as ground truth, using the `ARI` and `NMI` as the metrics to evalute the useness of predicted gene expressions.
+We evaluated the performance of predicted gene expression on the clustering task. We regard the pathology annotations as ground truth, using the `ARI` and `NMI` as the metrics to evaluate the usefulness of predicted gene expressions.
 
+### Inference
+If you have completed the benchmarking works on the in-domain dataset under the LOOCV strategy or can load the weights from the pretrained model, you can run the Inference process following the scripts below.
+```
+python ./Implementation/Inference.py \
+        --dataset_name BC_visium \
+        --model_name stimage \
+        --gene_list func \
+        --colornorm reinhard \
+        --seed 42 \
+        --hpc wiener \
+```
+Note: The model weight should be saved at `./Model_Weights/{dataset_name}/`, the filename should be followed the format `{model_name}_{dataset_name}_{colornorm}_{Slide_name}_{gene_list}.ckpt`. The results include three components, predicted gene expression (Anndata), ground truth gene expression (Anndata), spatial location matrix (numpy array). They were saved at `./Results/{dataset_name}`.
 
 
 # Acknowledgments
