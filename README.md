@@ -184,6 +184,13 @@ python ./Implementation/Inference.py \
 ```
 Note: The model weight should be saved at `./Model_Weights/{dataset_name}/`, the filename should be followed the format `{model_name}_{dataset_name}_{colornorm}_{Slide_name}_{gene_list}.ckpt`. The results include three components, predicted gene expression (Anndata), ground truth gene expression (Anndata), spatial location matrix (numpy array). They were saved at `./Results/{dataset_name}`.
 
+### Metrics computation
+If you have generated the Anndata results and saved them at `./Results/{dataset_name}`, you can run the scripts below to compute the metrics and save them into a dataframe.
+```
+python ./Implementation/Inference.py \
+        --dataset_name BC_visium \
+```
+The summary table will be saved at `./Results/Summary`.
 
 # Acknowledgments
 The benchmarking work is based on the original paper and codes.
