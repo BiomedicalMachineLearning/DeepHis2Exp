@@ -174,7 +174,8 @@ We evaluated the performance of predicted gene expression on the clustering task
 ### Inference
 If you have completed the benchmarking works on the in-domain dataset under the LOOCV strategy or can load the weights from the pretrained model, you can run the Inference process following the scripts below.
 ```
-python ./Implementation/Inference.py \
+python ./Implementation/Baseline_inference.py \
+        --fold 0
         --dataset_name BC_visium \
         --model_name stimage \
         --gene_list func \
