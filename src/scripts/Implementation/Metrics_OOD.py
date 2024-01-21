@@ -23,8 +23,8 @@ from scipy.stats import pearsonr, spearmanr
 from skimage.metrics import structural_similarity as ssim
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset_name', type=str, default="SCC_Chenhao", help='Dataset choice.')
-parser.add_argument('--gene_list', type=str, default="func", help='Dataset choice.')
+parser.add_argument('--source_dataset', type=str, default="Skin_Melanoma", help='Dataset choice.')
+parser.add_argument('--target_dataset', type=str, default="Skin_cSCC", help='Dataset choice.')
 parser.add_argument('--fold', type=int, default=0, help='No. of slides')
 parser.add_argument('--distributed', type=bool, default=False, help='Calculate the metric by slide')
 args = parser.parse_args()
@@ -153,7 +153,7 @@ def top_predictable_genes(df_all, dataset, method, num=5,):
 
     return top5_df
 
-def make_res(dataset_name, colornorm, Methods, names, distributed, gene_list):
+def make_res(dataset_name, colornorm, Methods, names, distributed):
     """
     input the dataset name, colornorm, methods, and names of the slides
     output the results of the methods with three metrics: Pearson correlation, Spearman correlation, and SSIM score
@@ -162,11 +162,12 @@ def make_res(dataset_name, colornorm, Methods, names, distributed, gene_list):
         if distributed:
             gc.collect()
             name = names[fold]
-            file_path = f"../Results/{dataset_name}/gt_{method}_{dataset_name}_{colornorm}_{name}_{gene_list}.h5ad"
+            file_path = f"../Results/Generalizability/{source_dataset}2{target_dataset}/pred_{method}_{source_dataset}_{target_dataset}_{name}_mean.h5ad"
             if os.path.exists(file_path):
-                data1 = sc.read_h5ad(f"../Results/{dataset_name}/gt_{method}_{dataset_name}_{colornorm}_{name}_{gene_list}.h5ad")
-                data2 = sc.read_h5ad(f"../Results/{dataset_name}/pred_{method}_{dataset_name}_{colornorm}_{name}_{gene_list}.h5ad")
-                spatial_matrix = np.load(f"../Results/{dataset_name}/spatial_loc_{method}_{dataset_name}_reinhard_{name}_{gene_list}.npy")
+                data1 = sc.read_h5ad(f"../Results/Generalizability/{source_dataset}2{target_dataset}/gt_{method}_{source_dataset}_{target_dataset}_{name}.h5ad")
+                data2 = sc.read_h5ad(f"../Results/Generalizability/{source_dataset}2{target_dataset}/pred_{method}_{source_dataset}_{target_dataset}_{name}_mean.h5ad")
+                spatial_matrix = np.load(f"../Results/Generalizability/{source_dataset}2{target_dataset}/spatial_loc_{method}_{source_dataset}_{target_dataset}_{name}_func.npy")
+                
                 pcc, PCC_PValue = get_R(data1, data2, dim=1, func=pearsonr)
                 SPC, SPC_PValue = get_R(data1, data2, dim=1, func=spearmanr)
                 ssim_score = get_ssim(data1, data2)
@@ -187,45 +188,48 @@ def make_res(dataset_name, colornorm, Methods, names, distributed, gene_list):
                 "Method": [method]*len(pcc),}
                 
                 PCC_BC_Visium = pd.DataFrame(PCC_BC_Visium)
-                if not os.path.isdir(f"../Results/{dataset_name}"):
-                    os.mkdir(f"../Results/{dataset_name}")
-                PCC_BC_Visium.to_csv(f"../Results/{dataset_name}/{method}_{dataset_name}_{colornorm}_{name}_MI_{gene_list}.csv")
+                if not os.path.isdir(f"../Results/{source_dataset}2{target_dataset}"):
+                    os.mkdir(f"../Results/{source_dataset}2{target_dataset}")
+                PCC_BC_Visium.to_csv(f"../Results/{source_dataset}2{target_dataset}/{method}_{source_dataset}_{target_dataset}_{name}_MI.csv")
             else:
                 print(f"The file {file_path} does not exist. Skipping.")
+       
     print("Organize the results into summary file!")
-    res = glob.glob(f"../Results/{dataset_name}/*_MI_{gene_list}.csv")
+    res = glob.glob(f"../Results/Generalizability/*_MIcsv")
     df = pd.concat([pd.read_csv(i, index_col=[0]) for i in res])
     df.reset_index(inplace=True)
-    df.to_csv(f"../Results/Summary/{dataset_name}_summary_MI_{gene_list}.csv")
+    df.to_csv(f"../Results/Summary/OOD_{source_dataset}_{target_dataset}_summary_MI.csv")
     return df
 
+
+
 # Read the method names
-dataset_name = args.dataset_name
+source_dataset = args.source_dataset
+target_dataset = args.target_dataset
+
 colornorm = "reinhard"
 Methods = ["deeppt", "hist2st", "histogene", "stimage", "stnet", "deepspace", "bleep"]
-if dataset_name == "Kidney_visium":
+if target_dataset == "Kidney_visium":
     names = ["A", "B", "C", "D", "Visium14_C", "Visium14_D"]
-elif dataset_name == "BC_Her2ST":
-    names = list(set([i.split("_")[-2] for i in glob.glob(f"../Results/{dataset_name}/gt_stimage_{dataset_name}_reinhard*h5ad")]))
-elif dataset_name == "BC_visium":
+elif target_dataset == "BC_Her2ST":
+    names = list(set([i.split("_")[-2] for i in glob.glob(f"../Results/{target_dataset}/gt_stimage_{target_dataset}_reinhard*h5ad")]))
+elif target_dataset == "BC_visium":
     names = ["1142243F", "1160920F", "CID4290", "CID4465", "CID44971", "CID4535", "FFPE", "block1", "block2"]
-elif dataset_name == "Skin_Melanoma":
+elif target_dataset == "Skin_Melanoma":
     names = ["Visium29_B1", "Visium29_C1", "Visium37_D1", "Visium38_B1", "Visium38_D1"]
-elif dataset_name == "Skin_cSCC":
+elif target_dataset == "Skin_cSCC":
     names = ['P2_ST_rep1', 'P2_ST_rep2', 'P2_ST_rep3', 'P5_ST_rep1', 
          'P5_ST_rep2', 'P5_ST_rep3', 'P9_ST_rep1', 'P9_ST_rep2', 
          'P9_ST_rep3', 'P10_ST_rep1', 'P10_ST_rep2', 'P10_ST_rep3']
-elif dataset_name == "Liver_visium":
+elif target_dataset == "Liver_visium":
     names = ["C73_A1_VISIUM", "C73_B1_VISIUM", "C73_C1_VISIUM", "C73_D1_VISIUM"]
 
 names.sort()
 fold = args.fold
 distributed = args.distributed
-gene_list = args.gene_list
 print(f"Sample names:{names}")
 print(f"Sample name:{names[fold]}")
 print(f"fold:{fold}")
-print(f"target gene list:{gene_list}")
 
 # Organize the results into dataframe
-df = make_res(dataset_name, colornorm, Methods, names, distributed, gene_list)
+df = make_res(target_dataset, colornorm, Methods, names, distributed)
