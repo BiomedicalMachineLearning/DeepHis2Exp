@@ -85,7 +85,6 @@ python ./Implementation/Baseline.py \
         --exp_norm log1p \
         --seed 42 \
         --fold 0 \
-        --hpc wiener \
 ```
 
 
@@ -104,14 +103,13 @@ python ./Implementation/GraphConstruction/BuildGraph_dgl.py \
         --dataset_name BC_visium \
         --model_name hist2st_GraphBuild \
         --gene_list func \
-        --gnn GCN
+        --gnn GCN \
         --pag True \
         --gag True \
         --colornorm reinhard \
         --exp_norm log_norm \
         --seed 42 \
         --fold 0 \
-        --hpc wiener \
 ```
 
 Note: You only need to modify `pag` and `gag`. If `pag` is True, the weighted graph is constructed by pathology annotations. If `gag` is True, the weighted graph is constructed by gene expression similarity. If both of them were True, the weighted graph is the summation of two graphs.
@@ -130,7 +128,6 @@ python ./Implementation/GraphConstruction/BuildGraph_dgl.py \
         --exp_norm log_norm \
         --seed 42 \
         --fold 0 \
-        --hpc wiener \
 ```
 
 Note: You only need to modify `pag` and `gag`. If `pag` is True, the weighted graph is constructed by pathology annotations. If `gag` is True, the weighted graph is constructed by gene expression similarity. If both of them were True, the weighted graph is the summation of two graphs.
@@ -148,7 +145,6 @@ python ./Implementation/Buildgraph.py \
         --exp_norm log1p \
         --seed 42 \
         --fold 0 \
-        --hpc wiener \
 ```
 
 ### Benchmarking gene expression preprocessing
@@ -162,7 +158,6 @@ python ./Implementation/Baseline.py \
         --exp_norm log1p \
         --seed 42 \
         --fold 0 \
-        --hpc wiener \
 ```
 
 Note: You only need to change `exp_norm`, the options are `raw`, `log1p`, `lognorm`, and `norm`.
@@ -175,23 +170,24 @@ We evaluated the performance of predicted gene expression on the clustering task
 If you have completed the benchmarking works on the in-domain dataset under the LOOCV strategy or can load the weights from the pretrained model, you can run the Inference process following the scripts below.
 ```
 python ./Implementation/Baseline_inference.py \
-        --fold 0
+        --fold 0 \
         --dataset_name BC_visium \
         --model_name stimage \
         --gene_list func \
         --colornorm reinhard \
         --seed 42 \
-        --hpc wiener \
 ```
 Note: The model weight should be saved at `./Model_Weights/{dataset_name}/`, the filename should be followed the format `{model_name}_{dataset_name}_{colornorm}_{Slide_name}_{gene_list}.ckpt`. The results include three components, predicted gene expression (Anndata), ground truth gene expression (Anndata), spatial location matrix (numpy array). They were saved at `./Results/{dataset_name}`.
 
 ### Metrics computation
 If you have generated the Anndata results and saved them at `./Results/{dataset_name}`, you can run the scripts below to compute the metrics and save them into a dataframe.
 ```
-python ./Implementation/Inference.py \
+python ./Implementation/Metrics.py \
         --dataset_name BC_visium \
+        --gene_list func \
+        --fold \
 ```
-The summary table will be saved at `./Results/Summary`.
+The summary table will be saved at `./Results/Summary`. The fold is the No. of slide, you can use for loop to enumerate all results.
 
 # Acknowledgments
 The benchmarking work is based on the original paper and codes.

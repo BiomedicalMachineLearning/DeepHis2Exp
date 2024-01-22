@@ -23,10 +23,9 @@ from scipy.stats import pearsonr, spearmanr
 from skimage.metrics import structural_similarity as ssim
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset_name', type=str, default="SCC_Chenhao", help='Dataset choice.')
+parser.add_argument('--dataset_name', type=str, default="BC_Her2ST", help='Dataset choice.')
 parser.add_argument('--gene_list', type=str, default="func", help='Dataset choice.')
 parser.add_argument('--fold', type=int, default=0, help='No. of slides')
-parser.add_argument('--distributed', type=bool, default=False, help='Calculate the metric by slide')
 args = parser.parse_args()
 
 def get_R(data1,data2, dim=1,func=pearsonr):
