@@ -133,7 +133,6 @@ python ./Implementation/GraphConstruction/BuildGraph_dgl.py \
 Note: You only need to modify `pag` and `gag`. If `pag` is True, the weighted graph is constructed by pathology annotations. If `gag` is True, the weighted graph is constructed by gene expression similarity. If both of them were True, the weighted graph is the summation of two graphs.
 
 
-
 ### Benchmarking color normalization
 
 ```
