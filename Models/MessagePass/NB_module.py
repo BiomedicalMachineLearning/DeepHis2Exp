@@ -44,5 +44,3 @@ def ZINB_loss(x, mean, disp, pi, scale_factor=1.0, ridge_lambda=0.0):
         result += ridge
     result = torch.mean(result)
     return result
-
-    VQ-GAEST
