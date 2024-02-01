@@ -162,6 +162,7 @@ python ./Implementation/Baseline.py \
 Note: You only need to change `exp_norm`, the options are `raw`, `log1p`, `lognorm`, and `norm`.
 
 ### Downstream task performance (spatial region detection)
+If you are interested in the clustering performance of predicted gene expression from seven models, you may check the [notebook](Figures/BC_visium_clustering.ipynb).
 
 We evaluated the performance of predicted gene expression on the clustering task. We regard the pathology annotations as ground truth, using the `ARI` and `NMI` as the metrics to evaluate the usefulness of predicted gene expressions.
 
