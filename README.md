@@ -4,7 +4,7 @@ Generalization of deep learning models for predicting spatial gene expression pr
 
 ![Benchmarking Overview](https://github.com/BiomedicalMachineLearning/DeepHis2Exp/blob/main/Figures/Cover.png)
 
-# Summary of Image Encoders and Loss Functions from 6 Models
+# Summary of Image Encoders and Loss Functions from 7 Models
 
 | **Model** | **Image Encoder**         | **Loss Function**                                            |
 | --------- | ------------------------- | ------------------------------------------------------------ |
