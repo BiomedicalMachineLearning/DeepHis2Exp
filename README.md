@@ -29,20 +29,20 @@ We conduct comprehensive and systematic benchmarking on the points below.
 * Identification of predictable genes from the In-Domain training results and corresponding gene enrichment analysis.
 
 * Downstream task analysis to evaluate the useness of predicted gene expression.
-
   
 
-Note: Benchmarking model performance on In-Domain datasets are using the default parameters from the original papers. All benchmarking models applied `reinhard` color normalization to reduce the variation in the color space. For fairly comparison, we apply the early stopping for all models.
+Note: Benchmarking model performance on In-Domain datasets are using the default parameters from the original papers. All benchmarking models applied `reinhard` color normalization to reduce the variation in the color space. For fairly comparison on unseen dataset and saving computational resources, we apply the early stopping for all models.
 
 
 ## Prerequisites
 
 List any prerequisites or dependencies that users need to have installed or set up before using the pipeline.
 
-The `environment.yml` contains the required dependencies for the conda environment.
-If you can not install via `yml` file, you can run the commands below. All models are implemented by `pytorch`, so the you need to install pytorch according to your device.
+The `DeepHis2Exp.yml` contains the required dependencies for the conda environment.
+If you can not install via `yml` file, you can run the commands below. All models were implemented by `pytorch`, so the you need to install pytorch according to your device.
 
 ```
+pip install scanpy
 pip install squidpy
 pip install torchstain
 pip install lightning
@@ -50,21 +50,18 @@ pip install easydl
 pip install einops
 pip install geopandas
 pip install splot
-pip install -U scikit-image
+pip install scikit-image
 pip install torch_geometric
 pip install opencv-python
 pip install scprep
 pip install hdf5plugin
-pip install  dgl -f https://data.dgl.ai/wheels/repo.html
-pip install  dglgo -f https://data.dgl.ai/wheels-test/repo.html
 pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.1.0+cu118.html
 ```
 
 
-
 ## Getting Started
 
-### 1. Clone the Repository
+### Clone the Repository
 
 ```bash
 git clone https://github.com/BiomedicalMachineLearning/DeepHis2Exp.git
@@ -81,102 +78,62 @@ python ./Implementation/Baseline.py \
         --model_name stimage \
         --gene_list func \
         --colornorm reinhard \
-        --exp_norm log1p \
+        --exp_norm lognorm \
         --seed 42 \
         --fold 0 \
 ```
-
-
-
-The trained model weights are saved in `./Model_Weights`. The predicted gene expressions are saved in `./Results/dataset_name/`, format is `*.h5ad`.
+Note: The trained model weights are saved in `./Model_Weights/{dataset_name}`. The predicted gene expressions are saved in `./Results/dataset_name/`, format is `*.h5ad`.  The filename should be followed the format `{model_name}_{dataset_name}_{colornorm}_{Slide_name}_{gene_list}.ckpt`. The results include three components, predicted gene expression (Anndata), ground truth gene expression (Anndata), spatial location matrix (numpy array). They were saved at `./Results/{dataset_name}`.
 
 ### Benchmarking model generalizability (OOD) datasets
-
-Check the `notebook`.
-
+```
+python ./Implementation/Generalizability/OOD_Inference.py --fold 0 \
+                                                        --colornorm reinhard \
+                                                        --source_dataset BC_visium \
+                                                        --target_dataset BC_Her2ST \
+                                                        --HPC wiener \
+```
+Note: `source_dataset` represents which dataset the model is trained on, `target_dataset` is which dataset is used for evaluating model performance. This is inference only, without finetuning.
 
 ### Benchmarking customized graph construction methods
 
 ```
-python ./Implementation/GraphConstruction/BuildGraph_dgl.py \
-        --dataset_name BC_visium \
-        --model_name hist2st_GraphBuild \
-        --gene_list func \
-        --gnn GCN \
-        --pag True \
-        --gag True \
-        --colornorm reinhard \
-        --exp_norm log_norm \
-        --seed 42 \
-        --fold 0 \
+python ./Implementation/New_graphbuild/Graphconstruction.py  --fold 0 \
+                                                                --SLG \
+                                                                --PAG \
+                                                                --HSG \
 ```
 
-Note: You only need to modify `pag` and `gag`. If `pag` is True, the weighted graph is constructed by pathology annotations. If `gag` is True, the weighted graph is constructed by gene expression similarity. If both of them were True, the weighted graph is the summation of two graphs.
+Note: The abalation experiment can be conducted by removing one of parameters(`SLG`, `PAG`, `HSG`). If `SLG` is True, the weighted graph is constructed by spatial location. If `PAG` is True, the weighted graph is constructed by pathology annotations. If `HSG` is True, the weighted graph is constructed by histological image similarity(distance=cosine similarity). If there are two graph methods presented, the weighted graph is the summation of two graphs.
 
-### Benchmarking message passing methods based on Hist2ST
-
-```
-python ./Implementation/GraphConstruction/BuildGraph_dgl.py \
-        --dataset_name BC_visium \
-        --model_name hist2st_GraphBuild \
-        --gene_list func \
-        --gnn GCN
-        --pag True \
-        --gag True \
-        --colornorm reinhard \
-        --exp_norm log_norm \
-        --seed 42 \
-        --fold 0 \
-```
-
-Note: You only need to modify `pag` and `gag`. If `pag` is True, the weighted graph is constructed by pathology annotations. If `gag` is True, the weighted graph is constructed by gene expression similarity. If both of them were True, the weighted graph is the summation of two graphs.
-
-
-### Benchmarking color normalization
+### Benchmarking message passing methods based on DeepPT with pathology annotation graph
 
 ```
-python ./Implementation/Buildgraph.py \
-        --dataset_name BC_visium \
-        --model_name stimage \
-        --gene_list func \
-        --colornorm reinhard \
-        --exp_norm log1p \
-        --seed 42 \
-        --fold 0 \
+python ./Implementation/New_graphbuild/Messagepass.py   --PAG \
+                                                        --gnn gin \
+                                                        --fold 0 \
 ```
+
+Note: The abalation experiment can be conducted by changing the `gnn` to `gin`(graph isomorphism network), `gat`(graph attention network), `gcn`(graph convolutional network). 
+
+
+### Benchmarking color transformation
+
+```
+python ./Implementation/Preprocess.py --augment random_grayscale --fold 0 
+```
+Note: The `augment` can be changed to `blur`, `random_grayscale`.
 
 ### Benchmarking gene expression preprocessing
 
 ```
-python ./Implementation/Baseline.py \
-        --dataset_name BC_visium \
-        --model_name stimage \
-        --gene_list func \
-        --colornorm reinhard \
-        --exp_norm log1p \
-        --seed 42 \
-        --fold 0 \
+python ./Implementation/Preprocess.py --exp_norm minmax --fold
 ```
-
-Note: You only need to change `exp_norm`, the options are `raw`, `log1p`, `lognorm`, and `norm`.
+Note: `exp_norm` can be changed, the options are `raw`, `minmax`, `log1p`, `lognorm`, and `norm`.
 
 ### Downstream task performance (spatial region detection)
-If you are interested in the clustering performance of predicted gene expression from seven models, you may check the [notebook](Figures/BC_visium_clustering.ipynb).
+If you are interested in the clustering performance of predicted gene expression from seven models, refer to [notebook](Figures/Figure6.ipynb).
 
 We evaluated the performance of predicted gene expression on the clustering task. We regard the pathology annotations as ground truth, using the `ARI` and `NMI` as the metrics to evaluate the usefulness of predicted gene expressions.
-
-### Inference
-If you have completed the benchmarking works on the in-domain dataset under the LOOCV strategy or can load the weights from the pretrained model, you can run the Inference process following the scripts below.
-```
-python ./Implementation/Baseline_inference.py \
-        --fold 0 \
-        --dataset_name BC_visium \
-        --model_name stimage \
-        --gene_list func \
-        --colornorm reinhard \
-        --seed 42 \
-```
-Note: The model weight should be saved at `./Model_Weights/{dataset_name}/`, the filename should be followed the format `{model_name}_{dataset_name}_{colornorm}_{Slide_name}_{gene_list}.ckpt`. The results include three components, predicted gene expression (Anndata), ground truth gene expression (Anndata), spatial location matrix (numpy array). They were saved at `./Results/{dataset_name}`.
 
 ### Metrics computation
 If you have generated the Anndata results and saved them at `./Results/{dataset_name}`, you can run the scripts below to compute the metrics and save them into a dataframe.
@@ -188,8 +145,15 @@ python ./Implementation/Metrics.py \
 ```
 The summary table will be saved at `./Results/Summary`. The fold is the No. of slide, you can use for loop to enumerate all results.
 
+### Gene expression visualization
+We can visualize the predicted gene expression on the tissue, refer to [notebook](./Figures/Figure5.ipynb).
+
+### Pathway analysis
+After we got the top predictable genes, we can have a quick look that the pathway enrichment analysis for the set of predictable genes, you can refer to [notebook](./Figures/FigureS3.ipynb).
+
+
 # Acknowledgments
-The benchmarking work is based on the original paper and codes.
+The benchmarking work is based on the original paper and codes, part of them were reimplemented due to the availabity and reproducibility of the code.
 | No. | Algorithm | Year | Datasets | Compared |
 | --- | --- | --- | --- | --- |
 | 1 | [ST-Net](https://www.nature.com/articles/s41551-020-0578-x) [[Code]](https://github.com/bryanhe/ST-Net) | 2020 | BC0 |  |

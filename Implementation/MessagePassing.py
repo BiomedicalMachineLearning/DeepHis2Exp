@@ -4,76 +4,50 @@ import gc
 import cv2
 import tqdm
 import torch
-import glob
 import random
 import pytorch_lightning as pl
 import pandas as pd
 import numpy as np
 import anndata as ad
-import seaborn as sns
 import argparse
-import matplotlib.pyplot as plt
 # Add relative path
-sys.path.append("../../")
-
-from scipy.stats import pearsonr, spearmanr
-from scipy.sparse import issparse
-from sklearn.metrics.pairwise import cosine_similarity
+sys.path.append("../")
 from torch.utils.data import DataLoader
 from pytorch_lightning import seed_everything
-from Models.DeepPT.DeepPT_MessagePass import DeepPT_messagepass
+from Models.DeepPT.CNN_GAE import *
 from Dataloader.Dataset_wiener import *
+# from Dataloader.Dataset import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--fold', type=int, default=5, help='dataset fold.')
 parser.add_argument('--seed', type=int, default=42, help='random seed.')
-parser.add_argument('--colornorm', type=str, default="raw", help='Color normalization methods.')
-parser.add_argument('--dataset_name', type=str, default="BC_visium", help='Dataset choice.')
-parser.add_argument('--model_name', type=str, default="DeepPT_GNN", help='Model choice.')
+parser.add_argument('--colornorm', type=str, default="reinhard", help='Color normalization methods.')
+parser.add_argument('--dataset_name', type=str, default="weighted_graph", help='Dataset choice.')
+parser.add_argument('--model_name', type=str, default="CNN_GAE", help='Model choice.')
 parser.add_argument('--gene_list', type=str, default="func", help='Gene list choice.')
+parser.add_argument('--gnn', type=str, default="GCN", help='Gene list choice.')
+parser.add_argument('--GAG', action='store_true', default=False, help='Gene expression similarity graph.')
+parser.add_argument('--PAG', action='store_true', default=False, help='Pathology annotation graph.')
+parser.add_argument('--weighted_graph', action='store_true', default=False, help='weighted graph.')
 parser.add_argument('--hpc', type=str, default="wiener", help='Clusters choice')
-parser.add_argument('--exp_norm', type=str, default="lognorm", help='Expression preprocessing')
-parser.add_argument('--PAG', default=False, action="store_true",)
-parser.add_argument('--SLG', default=False, action="store_true")
-parser.add_argument('--HSG', default=False, action="store_true")
-parser.add_argument('--gnn', type=str, default="gcn", help='Gene list choice.')
 args = parser.parse_args()
 
 fold = args.fold
 seed = args.seed
 colornorm = args.colornorm
 dataset_name = args.dataset_name
+model_name = args.model_name
 gene_list = args.gene_list
-exp_norm = args.exp_norm
-hpc = args.hpc
-PAG = args.PAG
-SLG = args.SLG
-HSG = args.HSG
+weighted_graph = args.weighted_graph
 gnn = args.gnn
-model_name = f"DeepPT_{gnn}"
+pag = args.PAG
+gag = args.GAG
+hpc = args.hpc
 
-
-"""
-Hyperparameters settings
-"""
-print("Start working!")
-print("Hyperparameters are as follows:")
-print("Fold:", fold)
-print("Color normalization method:", colornorm)
-print("Dataset_name:", dataset_name)
-print("Model_name:", model_name)
-print("gene_list:", gene_list)
-print("exp_norm:", exp_norm)
-print("cluster:", hpc)
-print("HSG:", HSG)
-print("SLG:", SLG)
-print("PAG:", PAG)
-print("GNN:", gnn)
-
+exp_norm = "log1p"
 if hpc == "wiener":
     abs_path = "/afm03/Q2/Q2051/DeepHis2Exp/Models/Benchmarking_main"
     model_weight_path = "/afm03/Q2/Q2051/DeepHis2Exp/Model_Weights"
-   #  model_weight_path = "/scratch/imb/uqyjia11/Yuanhao/DeepHis2Exp/Model_Weights"
     res_path = "/afm03/Q2/Q2051/DeepHis2Exp/Results"
     data_path = "/afm03/Q2/Q2051/DeepHis2Exp/Dataset"
 elif hpc == "vmgpu":
@@ -87,30 +61,43 @@ elif hpc == "bunya":
     res_path = "/QRISdata/Q2051/DeepHis2Exp/Results"
     data_path = "/QRISdata/Q2051/DeepHis2Exp/Dataset"
 
+print("Start training!")
+print("Hyperparameters are as follows:")
+print("Fold:", fold)
+print("Color normalization method:", colornorm)
+print("Dataset_name:", dataset_name)
+print("Model_name:", model_name)
+print("gene_list:", gene_list)
+print("exp_norm:", exp_norm)
+print("gnn:", gnn)
+print("PAG:", pag)
+print("GAG:", gag)
+print("cluster:", hpc)
+
+
 # For reproducing the results
 seed_everything(seed)
 
 # Load train and test dataset and wrap dataloader
+target_gene_list = list(np.load(f'{data_path}/Gene_list/Gene_list_{gene_list}_BC_visium.npy', allow_pickle=True))
 
-# Functional genes for visium dataset
-target_gene_list = list(np.load(f'{data_path}/Gene_list/Gene_list_{gene_list}_{dataset_name}.npy', allow_pickle=True))
+full_train_dataset = GAE_Anndata(
+    fold=fold, gene_list=target_gene_list, num_subsets=60,
+    train=True, r=112, exp_norm=exp_norm, GAG=gag, PAG=pag,
+    neighs=6, color_norm=colornorm, target=target, weighted_graph=weighted_graph )
+test_dataset = GAE_Anndata(
+    fold=fold, gene_list=target_gene_list, num_subsets=60,
+    train=False, r=112, exp_norm=exp_norm, GAG=False, PAG=False,
+    neighs=6, color_norm=colornorm, target=target, weighted_graph=weighted_graph, )
 
-# Load sample names
-full_train_dataset = WeightedGraph_Anndata(fold=fold, gene_list=target_gene_list, num_subsets=50,
-                    train=True, r=112, exp_norm='lognorm', SLG=SLG, HSG=HSG, PAG=PAG,
-                    neighs=8, color_norm=colornorm, target=target, distance_mode="distance",)
+# For real dataset only
 tr_loader = DataLoader(full_train_dataset, batch_size=1, shuffle=True)
-gc.collect()
-
-test_dataset = WeightedGraph_Anndata(fold=fold, gene_list=target_gene_list, num_subsets=50,
-                    train=False, r=112, exp_norm='lognorm', SLG=SLG, HSG=HSG, PAG=PAG,
-                    neighs=8, color_norm=colornorm, target=target, distance_mode="distance",)
 te_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 gc.collect()
 
 # Define model and train
-model = DeepPT_messagepass(gnn=gnn, n_genes=len(target_gene_list), hidden_dim=512, learning_rate=1e-4)
-    
+model = CNNGAE(gnn=gnn)
+
 # Empty cache of GPU
 torch.cuda.empty_cache()
 
@@ -122,22 +109,22 @@ checkpoint_callback = pl.callbacks.ModelCheckpoint(save_top_k=1, dirpath=f"{mode
                                                    filename=f"{model_name}_{dataset_name}_{colornorm}_{test_dataset.te_names}", 
                                                    monitor="train_loss", mode="min")
 
+# Define trainer for each model
 trainer = pl.Trainer(accelerator='auto', 
                     callbacks=[early_stop, checkpoint_callback], 
-                    max_epochs=100, logger=False)
+                    max_epochs=500, logger=True)
+
 
 # Start training and save best model
 trainer.fit(model, tr_loader)
-
 print(checkpoint_callback.best_model_path)   # prints path to the best model's checkpoint
 print(checkpoint_callback.best_model_score) # and prints it score
 best_model = model.load_state_dict(torch.load(checkpoint_callback.best_model_path)["state_dict"])
-torch.save(torch.load(checkpoint_callback.best_model_path)["state_dict"], f"{model_weight_path}/{dataset_name}/{model_name}_PAG{str(PAG)}_HSG{str(HSG)}_{test_dataset.te_names}_{gene_list}.ckpt")
+torch.save(torch.load(checkpoint_callback.best_model_path)["state_dict"], f"{model_weight_path}/{dataset_name}/{gnn}_weighted_{weighted_graph}_GAG{gag}_PAG{pag}_{test_dataset.te_names}_{gene_list}.ckpt")
 os.remove(checkpoint_callback.best_model_path)
 
 # Inference
 gc.collect()
-target_gene_list = test_dataset.gene_set
 out = trainer.predict(model, te_loader)
 pred = ad.AnnData(np.concatenate([out[i][0] for i in range(len(out))]))
 gt_exp = np.concatenate([out[i][1] for i in range(len(out))])
@@ -149,15 +136,16 @@ pred.var_names = target_gene_list
 gt.var_names = target_gene_list
 
 # Save AnnData to H5AD file
-if not os.path.isdir(f"{res_path}/New_GraphBuild/"):
-    os.mkdir(f"{res_path}/New_GraphBuild/")
-pred.write(f"{res_path}/New_GraphBuild/pred_{model_name}_SLG_{str(SLG)}PAG{str(PAG)}_HSG{str(HSG)}_{test_dataset.te_names}_{gene_list}.h5ad")
-gt.write(f"{res_path}/New_GraphBuild/gt_{model_name}_SLG_{str(SLG)}PAG{str(PAG)}_HSG{str(HSG)}_{test_dataset.te_names}_{gene_list}.h5ad")
+if not os.path.isdir(f"{res_path}/{dataset_name}/"):
+    os.mkdir(f"{res_path}/{dataset_name}/")
+pred.write(f"{res_path}/{dataset_name}/pred_{gnn}_weighted_{weighted_graph}_GAG{gag}_PAG{pag}_{test_dataset.te_names}_{gene_list}.h5ad")
+gt.write(f"{res_path}/{dataset_name}/gt_{gnn}_weighted_{weighted_graph}_GAG{gag}_PAG{pag}_{test_dataset.te_names}_{gene_list}.h5ad")
 gc.collect()
 
 # Save spatial location to numpy array
 spatial_loc = np.concatenate([test_dataset.meta_dict[key].obsm["spatial"] for key in list(test_dataset.meta_dict.keys())])
-np.save(f'{res_path}/New_GraphBuild/spatial_loc_{model_name}_SLG_{str(SLG)}PAG{str(PAG)}_HSG{str(HSG)}_{test_dataset.te_names}_{gene_list}.npy', spatial_loc)
+np.save(f'{res_path}/{dataset_name}/spatial_loc_{gnn}_weighted_{weighted_graph}_GAG{gag}_PAG{pag}_{test_dataset.te_names}_{gene_list}.npy', spatial_loc)
 gc.collect()
 
+# Remove the log file after all models are trained
 print("Finish training!")
