@@ -151,7 +151,9 @@ We can visualize the predicted gene expression on the tissue, refer to [notebook
 ### Pathway analysis
 After we got the top predictable genes, we can have a quick look that the pathway enrichment analysis for the set of predictable genes, you can refer to [notebook](./Figures/FigureS3.ipynb).
 
-### 
+### Customized train/valid/test dataset splitting strategy
+You can use this pipeline to train and test on new visium data. You can find the example at [notebook](./Development/Blake_visium_train_test_regression.ipynb)
+
 
 # Acknowledgments
 The benchmarking work is based on the original paper and codes, part of them were reimplemented due to the availabity and reproducibility of the code.
